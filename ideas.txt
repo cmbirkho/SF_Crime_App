@@ -14,3 +14,8 @@ UI:
 Server:
 -support a daily job of running and updating the SQLite database
 -support interactive capabilities on all tabs
+
+
+Process:
+1. Need to do EDA and perform ETL on the dataset. What I discover/do here will be used in the application
+- think about how we can set up the data to use a linear model (for speed on the server)
