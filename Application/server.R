@@ -56,7 +56,7 @@ shinyServer(function(input, output){
     subSfCrime <- sfCrime[,c(3:5)]
     modFit <- train(incident_category ~ ., data = subSfCrime,
                     method = 'rpart')
-
+    
     output$predCrime <- reactive({
         
         sfCrimeFilt <- filter(sfCrime, police_district == input$districtInput &
