@@ -1,0 +1,11 @@
+# Code Book
+
+
+# R Script
+- Model_Fit.R: model selection for the prediction algorithm
+
+# Shiny Application
+- SF_Crime_App/server.R: the code for the backend server functionality
+- SF_Crime_App/ui.R: the code for the user interface
+
+# Reproducible Presentation
