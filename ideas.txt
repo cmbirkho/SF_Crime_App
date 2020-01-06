@@ -1,0 +1,16 @@
+Show:
+-EDA (charts, descriptive stats, distributions)
+-Inferential Statistics
+-Model Fitting
+-Clean UI
+
+UI:
+-Tab 1: EDA 
+-Tab 2: Inferential Stats
+-Tab 3: Prediction
+-Tab 4: data download capability
+-Tab 5: Your Data tab (shows the data the user generated and what was collected)
+
+Server:
+-support a daily job of running and updating the SQLite database
+-support interactive capabilities on all tabs
