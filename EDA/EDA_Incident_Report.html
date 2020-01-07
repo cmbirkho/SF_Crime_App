@@ -369,6 +369,9 @@ summary {
 </div>
 
 
+<div id="the-goal-of-this-eda-is-to-explore-the-dataset-while-validating-its-accuracy-and-reducing-the-size-of-the-data-necessary-to-complete-the-intended-tasks" class="section level4">
+<h4>The goal of this EDA is to explore the dataset while validating its accuracy and reducing the size of the data necessary to complete the intended tasks</h4>
+</div>
 <div id="download-the-data" class="section level4">
 <h4>Download the data</h4>
 <pre class="r"><code>url &lt;- &quot;https://data.sfgov.org/resource/wg3w-h783.csv&quot;
@@ -380,36 +383,36 @@ str(sfCrime)</code></pre>
 ##  $ incident_datetime          : chr  &quot;2019-08-15T11:41:00.000&quot; &quot;2019-09-17T22:00:00.000&quot; &quot;2019-10-04T14:25:00.000&quot; &quot;2019-10-03T19:30:00.000&quot; ...
 ##  $ incident_date              : chr  &quot;2019-08-15T00:00:00.000&quot; &quot;2019-09-17T00:00:00.000&quot; &quot;2019-10-04T00:00:00.000&quot; &quot;2019-10-03T00:00:00.000&quot; ...
 ##  $ incident_time              : chr  &quot;11:41&quot; &quot;22:00&quot; &quot;14:25&quot; &quot;19:30&quot; ...
-##  $ incident_year              : int  2019 2019 2019 2019 2019 2019 2019 2019 2019 2019 ...
+##  $ incident_year              : int  2019 2019 2019 2019 2019 2019 2018 2019 2019 2019 ...
 ##  $ incident_day_of_week       : chr  &quot;Thursday&quot; &quot;Tuesday&quot; &quot;Friday&quot; &quot;Thursday&quot; ...
 ##  $ report_datetime            : chr  &quot;2019-10-01T14:06:00.000&quot; &quot;2019-10-02T22:01:00.000&quot; &quot;2019-10-04T16:13:00.000&quot; &quot;2019-10-03T23:25:00.000&quot; ...
-##  $ row_id                     :integer64 85424006374 85426606374 85442603474 85419706244 85446351040 85425706224 85445026080 85444019089 ... 
-##  $ incident_id                : int  854240 854266 854426 854197 854463 854257 854450 854440 854357 854343 ...
-##  $ incident_number            : int  196208089 196208205 190746203 190744514 190746532 196208142 190746059 190746184 190745409 190740669 ...
-##  $ cad_number                 : int  NA NA 192772728 192764437 192772932 NA 192772346 192772064 192770635 NA ...
+##  $ row_id                     :integer64 85424006374 85426606374 85442603474 85419706244 85446351040 85425706224 72248630200 85445026080 ... 
+##  $ incident_id                : int  854240 854266 854426 854197 854463 854257 722486 854450 854440 854357 ...
+##  $ incident_number            : int  196208089 196208205 190746203 190744514 190746532 196208142 180755377 190746059 190746184 190745409 ...
+##  $ cad_number                 : int  NA NA 192772728 192764437 192772932 NA 182782753 192772346 192772064 192770635 ...
 ##  $ report_type_code           : chr  &quot;II&quot; &quot;II&quot; &quot;II&quot; &quot;II&quot; ...
 ##  $ report_type_description    : chr  &quot;Coplogic Initial&quot; &quot;Coplogic Initial&quot; &quot;Initial&quot; &quot;Initial&quot; ...
 ##  $ filed_online               : logi  TRUE TRUE NA NA NA TRUE ...
-##  $ incident_code              : int  6374 6374 3474 6244 51040 6224 26080 19089 7025 6304 ...
+##  $ incident_code              : int  6374 6374 3474 6244 51040 6224 30200 26080 19089 7025 ...
 ##  $ incident_category          : chr  &quot;Larceny Theft&quot; &quot;Larceny Theft&quot; &quot;Robbery&quot; &quot;Larceny Theft&quot; ...
 ##  $ incident_subcategory       : chr  &quot;Larceny Theft - Other&quot; &quot;Larceny Theft - Other&quot; &quot;Robbery - Other&quot; &quot;Larceny - From Vehicle&quot; ...
 ##  $ incident_description       : chr  &quot;Theft, Other Property, &gt;$950&quot; &quot;Theft, Other Property, &gt;$950&quot; &quot;Robbery, Att., W/ Force&quot; &quot;Theft, From Locked Vehicle, &gt;$950&quot; ...
 ##  $ resolution                 : chr  &quot;Open or Active&quot; &quot;Open or Active&quot; &quot;Open or Active&quot; &quot;Open or Active&quot; ...
 ##  $ intersection               : chr  &quot;&quot; &quot;&quot; &quot;BALBOA ST \\ GREAT HWY&quot; &quot;MARKET ST \\ RESERVOIR ST&quot; ...
-##  $ cnn                        : int  NA NA 28009000 25877000 27919000 25478000 27502000 23125000 20369000 24414000 ...
+##  $ cnn                        : int  NA NA 28009000 25877000 27919000 25478000 33580000 27502000 23125000 20369000 ...
 ##  $ police_district            : chr  &quot;Central&quot; &quot;Out of SF&quot; &quot;Richmond&quot; &quot;Mission&quot; ...
 ##  $ analysis_neighborhood      : chr  &quot;&quot; &quot;&quot; &quot;Outer Richmond&quot; &quot;Castro/Upper Market&quot; ...
-##  $ supervisor_district        : int  NA NA 1 8 1 3 1 7 10 6 ...
+##  $ supervisor_district        : int  NA NA 1 8 1 3 8 1 7 10 ...
 ##  $ latitude                   : num  NA NA 37.8 37.8 37.8 ...
 ##  $ longitude                  : num  NA NA -123 -122 -123 ...
 ##  $ point                      : chr  &quot;&quot; &quot;&quot; &quot;POINT (-122.51129492624534 37.77507596005672)&quot; &quot;POINT (-122.42746205880601 37.76877049785351)&quot; ...
-##  $ :@computed_region_6qbp_sg9q: int  NA NA 8 28 6 99 5 62 75 32 ...
-##  $ :@computed_region_qgnn_b9vv: int  NA NA 8 3 8 6 8 10 9 1 ...
-##  $ :@computed_region_26cr_cadq: int  NA NA 4 5 4 3 4 8 9 10 ...
-##  $ :@computed_region_ajp5_b2md: int  NA NA 29 5 29 23 29 16 40 34 ...
-##  $ :@computed_region_nqbw_i6c3: int  NA NA NA 5 NA NA NA NA NA 1 ...
-##  $ :@computed_region_2dwj_jsy4: int  NA NA NA NA NA NA NA NA NA NA ...
-##  $ :@computed_region_h4ep_8xdi: int  NA NA NA NA NA NA NA NA NA 1 ...
+##  $ :@computed_region_6qbp_sg9q: int  NA NA 8 28 6 99 112 5 62 75 ...
+##  $ :@computed_region_qgnn_b9vv: int  NA NA 8 3 8 6 7 8 10 9 ...
+##  $ :@computed_region_26cr_cadq: int  NA NA 4 5 4 3 5 4 8 9 ...
+##  $ :@computed_region_ajp5_b2md: int  NA NA 29 5 29 23 3 29 16 40 ...
+##  $ :@computed_region_nqbw_i6c3: int  NA NA NA 5 NA NA NA NA NA NA ...
+##  $ :@computed_region_2dwj_jsy4: int  NA NA NA NA NA NA 31 NA NA NA ...
+##  $ :@computed_region_h4ep_8xdi: int  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ :@computed_region_y6ts_4iup: int  NA NA NA NA NA NA NA NA NA NA ...
 ##  $ :@computed_region_jg9y_a9du: int  NA NA NA NA NA NA NA NA NA NA ...
 ##  - attr(*, &quot;.internal.selfref&quot;)=&lt;externalptr&gt;</code></pre>
@@ -431,16 +434,16 @@ pctMissVal &lt;- gather(pctMissVal, key = &#39;c_name&#39;, value = &#39;pct_na&
 # List columns with percentage of NAs from greatest to least
 print(pctMissVal[1:10, ])</code></pre>
 <pre><code>##                          c_name pct_na
-## 1  X..computed_region_y6ts_4iup   99.5
-## 2  X..computed_region_jg9y_a9du   97.7
-## 3  X..computed_region_2dwj_jsy4   97.2
-## 4  X..computed_region_h4ep_8xdi   92.6
-## 5  X..computed_region_nqbw_i6c3   84.0
-## 6                  filed_online   74.9
-## 7                    cad_number   26.1
-## 8  X..computed_region_6qbp_sg9q   11.0
-## 9                  intersection    9.2
-## 10                          cnn    9.2</code></pre>
+## 1  X..computed_region_y6ts_4iup   99.0
+## 2  X..computed_region_jg9y_a9du   97.3
+## 3  X..computed_region_2dwj_jsy4   95.2
+## 4  X..computed_region_h4ep_8xdi   89.2
+## 5  X..computed_region_nqbw_i6c3   81.5
+## 6                  filed_online   80.1
+## 7                    cad_number   21.4
+## 8  X..computed_region_6qbp_sg9q    8.4
+## 9                  intersection    6.9
+## 10                          cnn    6.9</code></pre>
 </div>
 <div id="with-a-high-percentage-of-nas-i-want-to-know-more-about-what-makes-up-the-computed_region-columns-are-they-useful-are-they-candidates-for-imputation" class="section level4">
 <h4>With a high percentage of NAs I want to know more about What makes up the <span class="citation">@computed_region</span> columns? Are they useful? Are they candidates for imputation?</h4>
@@ -466,21 +469,212 @@ pctMissVal &lt;- pctMissVal %&gt;% filter(c_name %ni% rowNm)
 
 print(pctMissVal[1:10,])</code></pre>
 <pre><code>##                   c_name pct_na
-## 1           filed_online   74.9
-## 2             cad_number   26.1
-## 3           intersection    9.2
-## 4                    cnn    9.2
-## 5  analysis_neighborhood    9.2
-## 6    supervisor_district    9.2
-## 7               latitude    9.2
-## 8              longitude    9.2
-## 9                  point    9.2
+## 1           filed_online   80.1
+## 2             cad_number   21.4
+## 3           intersection    6.9
+## 4                    cnn    6.9
+## 5  analysis_neighborhood    6.9
+## 6    supervisor_district    6.9
+## 7               latitude    6.9
+## 8              longitude    6.9
+## 9                  point    6.9
 ## 10     incident_datetime    0.0</code></pre>
 </div>
 <div id="removing-columns-filed_online-and-cad_number-due-to-high-percentage-of-nas" class="section level4">
 <h4>Removing columns filed_online and cad_number due to high percentage of NAs</h4>
 <pre class="r"><code>sfCrime &lt;- sfCrime[, -c(&#39;filed_online&#39;,
                         &#39;cad_number&#39;)]</code></pre>
+</div>
+<div id="clean-up-dates" class="section level4">
+<h4>Clean up dates</h4>
+<pre class="r"><code># Only interested in the dates right now. Cleaning those up and removing times
+sfCrime &lt;- sfCrime[, 
+                   `:=`(incident_date = str_sub(incident_date, 1, 10),
+                        report_date = str_sub(report_datetime, 1, 10))] %&gt;% 
+    .[,
+      `:=`(incident_date = ymd(incident_date),
+           report_date = ymd(report_date))]
+
+# excluding datetime and time
+sfCrime &lt;- sfCrime[, -c(&quot;incident_datetime&quot;, 
+                        &quot;report_datetime&quot;,
+                        &quot;incident_time&quot;)]</code></pre>
+</div>
+<div id="according-to-the-documentation-located-each-row-represents-an-incident.-lets-validate-which-column-supports-this" class="section level4">
+<h4>According to the documentation located each row represents an incident. Let’s validate which column supports this</h4>
+<pre class="r"><code># row_id
+uniqueN(sfCrime$row_id) == nrow(sfCrime); uniqueN(sfCrime$row_id)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre><code>## [1] 1000</code></pre>
+<pre class="r"><code># incident_id
+uniqueN(sfCrime$incident_id) == nrow(sfCrime); uniqueN(sfCrime$incident_id)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] 833</code></pre>
+<pre class="r"><code># incident_number
+uniqueN(sfCrime$incident_number) == nrow(sfCrime); uniqueN(sfCrime$incident_number)</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre><code>## [1] 814</code></pre>
+<pre class="r"><code># combo of incident_id, incident_number, and incident_code
+uniqueN(paste(sfCrime$incident_id, 
+              sfCrime$incident_number, 
+              sfCrime$incident_code, sep = &quot;&quot;)) == nrow(sfCrime); uniqueN(paste(sfCrime$incident_id, 
+              sfCrime$incident_number, 
+              sfCrime$incident_code, sep = &quot;&quot;))</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre><code>## [1] 1000</code></pre>
+<pre class="r"><code># setting up a unique column with the combination of incident_id, incident_number, and incident_code
+sfCrime &lt;- sfCrime[, incident_id_nbr_cd := paste(sfCrime$incident_id, 
+              sfCrime$incident_number, 
+              sfCrime$incident_code, sep = &quot;-&quot;)]
+
+# remove incident_id, incident_number, incident_code, and row_id. Reducing size of data
+sfCrime &lt;- sfCrime[, - c(&quot;incident_id&quot;,
+                         &quot;incident_number&quot;,
+                         &quot;incident_code&quot;,
+                         &quot;row_id&quot;)]</code></pre>
+</div>
+<div id="location-information" class="section level4">
+<h4>Location information</h4>
+<ul>
+<li>Can we reduce the location information to only police_district, latitude, and longitude?</li>
+<li>Removing incidents without any location detail removed 69 observations or 6.9% of data</li>
+</ul>
+<pre class="r"><code># remove &quot;point&quot; because we already have that detail
+sfCrime &lt;- sfCrime[, - &quot;point&quot;]
+
+# Remove incidents without any location detail
+sfCrime &lt;- sfCrime[, filt_ind := ifelse(is.na(latitude) &amp; 
+                                            is.na(intersection) &amp;
+                                            is.na(longitude) &amp;
+                                            is.na(supervisor_district) &amp; 
+                                            is.na(analysis_neighborhood), 1, 0)] %&gt;% 
+    .[filt_ind == 0, ] %&gt;% 
+    .[, - &quot;filt_ind&quot;]
+
+# Referencing the pctMissVal table I can see that police district does not have any NAs and could be used a general location reference for incidents without a latitude and longitude
+table(sfCrime$police_district); uniqueN(sfCrime$police_district)</code></pre>
+<pre><code>## 
+##    Bayview    Central  Ingleside    Mission   Northern  Out of SF       Park 
+##         75        149         81         90        133          1         49 
+##   Richmond   Southern    Taraval Tenderloin 
+##         85        105         86         77</code></pre>
+<pre><code>## [1] 11</code></pre>
+<pre class="r"><code># For now, excluding incidents without a lat/long.
+# This step did not remove any additional data
+sfCrime &lt;- sfCrime[!is.na(latitude) &amp; !is.na(longitude), ]
+
+
+# How are police_district and supervisor_district connected?
+# Doesn&#39;t appear to be a clean connection. Removing supervisor_district for now
+table(sfCrime$police_district, sfCrime$supervisor_district)</code></pre>
+<pre><code>##             
+##                1   2   3   4   5   6   7   8   9  10  11
+##   Bayview      0   0   0   0   0   2   0   0  14  59   0
+##   Central      0   6 131   0   0  12   0   0   0   0   0
+##   Ingleside    0   0   0   0   0   0   1  10  19  19  32
+##   Mission      0   0   0   0   0   0   0  32  51   7   0
+##   Northern     0  44  20   0  62   6   0   1   0   0   0
+##   Out of SF    0   0   1   0   0   0   0   0   0   0   0
+##   Park         3   1   0   0  25   0   4  16   0   0   0
+##   Richmond    63  13   0   3   6   0   0   0   0   0   0
+##   Southern     0   0   1   0   2 100   0   0   0   2   0
+##   Taraval      0   0   0  36   6   0  39   0   0   0   5
+##   Tenderloin   0   0   6   0   0  71   0   0   0   0   0</code></pre>
+<pre class="r"><code>sfCrime &lt;- sfCrime[, - &quot;supervisor_district&quot;]
+
+# Let&#39;s exclude anything with police_district equal to &quot;Out of SF&quot;
+sfCrime &lt;- sfCrime[police_district != &quot;Out of SF&quot;, ]
+
+
+# Excluding intersection for now. cnn is also related to intersection, excluding for now
+sfCrime &lt;- sfCrime[, - c(&quot;intersection&quot;,
+                         &quot;cnn&quot;)]</code></pre>
+</div>
+<div id="description-of-incidents" class="section level4">
+<h4>Description of incidents</h4>
+<pre class="r"><code># resolution is a column that might infer there will be more or less incidents in the future. Let&#39;s clean up resolution. Setting it up to expand this column into indicator columns later when fitting models
+sfCrime &lt;- sfCrime[, resolution := tolower(resolution)]
+sfCrime &lt;- sfCrime[, resolution := str_replace_all(resolution, &quot; &quot;, &quot;_&quot;)]
+
+
+# report_type_description is another column that might infer there will be more or less incidents in the future. Let&#39;s clean up report_type_description. Setting it up to expand this column into indicator columns later when fitting models
+sfCrime &lt;- sfCrime[, report_type_description := tolower(report_type_description)]
+sfCrime &lt;- sfCrime[, report_type_description := str_replace_all(report_type_description, &quot; &quot;, &quot;_&quot;)]
+
+# incident_category, incident_subcategory, and incident_description hold a lot of good detail. Potential to extract key words/phrases for model building (NLP). For now, let&#39;s clean up the column values
+
+
+# Removing report_type_code
+sfCrime &lt;- sfCrime[, - &quot;report_type_code&quot;]</code></pre>
+<pre class="r"><code># Add an incident_cnt column
+sfCrime$incident_cnt &lt;- 1
+
+# Re-order columns
+sfCrime &lt;- sfCrime[, c(&quot;incident_id_nbr_cd&quot;,
+                       &quot;incident_date&quot;,
+                       &quot;incident_day_of_week&quot;,
+                       &quot;incident_year&quot;,
+                       &quot;report_date&quot;,
+                       &quot;police_district&quot;,
+                       &quot;analysis_neighborhood&quot;,
+                       &quot;latitude&quot;,
+                       &quot;longitude&quot;,
+                       &quot;report_type_description&quot;,
+                       &quot;incident_category&quot;,
+                       &quot;incident_subcategory&quot;,
+                       &quot;incident_description&quot;,
+                       &quot;resolution&quot;,
+                       &quot;incident_cnt&quot;)]</code></pre>
+</div>
+<div id="distributions-and-summary-statisitcs" class="section level4">
+<h4>Distributions and summary statisitcs</h4>
+<pre class="r"><code># What is the total nbr of incidents per year?
+sfCrime[, .(incidents = sum(incident_cnt)),
+        by = incident_year]</code></pre>
+<pre><code>##    incident_year incidents
+## 1:          2019       712
+## 2:          2018       218</code></pre>
+<pre class="r"><code># What is the avg nbr of incidents per day?
+sum(sfCrime$incident_cnt)/uniqueN(sfCrime$incident_date)</code></pre>
+<pre><code>## [1] 20.66667</code></pre>
+<pre class="r"><code># What is the avg nbr of incidents per day by district?
+sfCrime[, .(avg_incidents = sum(incident_cnt)/uniqueN(incident_date)),
+        by = police_district]</code></pre>
+<pre><code>##     police_district avg_incidents
+##  1:        Richmond      5.312500
+##  2:         Mission      5.294118
+##  3:         Central      7.842105
+##  4:            Park      3.266667
+##  5:         Taraval      5.375000
+##  6:       Ingleside      5.400000
+##  7:        Southern      6.176471
+##  8:      Tenderloin      5.923077
+##  9:         Bayview      5.357143
+## 10:        Northern      6.333333</code></pre>
+<pre class="r"><code># What is the percentage of incidents by district?
+# Central, Northern, and Southern have the highest percentage of incidents. Is that potentially due to the size of the district?
+# Could be beneficial to bring in population/demographic data 
+sfCrime[, round(prop.table(table(incident_cnt, police_district), 1), 2)]</code></pre>
+<pre><code>##             police_district
+## incident_cnt Bayview Central Ingleside Mission Northern Park Richmond Southern
+##            1    0.08    0.16      0.09    0.10     0.14 0.05     0.09     0.11
+##             police_district
+## incident_cnt Taraval Tenderloin
+##            1    0.09       0.08</code></pre>
+<pre class="r"><code># What is the percentage of incidents by day of week?
+# Most incidents happen on Friday and Saturday (makes sense)
+sfCrime[, round(prop.table(table(incident_cnt, incident_day_of_week), 1), 2)]</code></pre>
+<pre><code>##             incident_day_of_week
+## incident_cnt Friday Monday Saturday Sunday Thursday Tuesday Wednesday
+##            1   0.27   0.03     0.25   0.16     0.16    0.05      0.07</code></pre>
+<pre class="r"><code># What is the percentage of incidents by resolution?
+# resolution doesn&#39;t appear to be a good indicator column. Removing from data
+sfCrime[, round(prop.table(table(incident_cnt, resolution), 1), 2)]</code></pre>
+<pre><code>##             resolution
+## incident_cnt cite_or_arrest_adult open_or_active unfounded
+##            1                 0.23           0.77      0.00</code></pre>
+<pre class="r"><code>sfCrime &lt;- sfCrime[, - &quot;resolution&quot;]</code></pre>
+<pre class="r"><code># Distribution of incidents by incident_category</code></pre>
 </div>
 
 

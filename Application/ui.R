@@ -1,31 +1,62 @@
 
 library(shiny)
+library(shinythemes)
 library(leaflet)
 
-shinyServer(fluidPage(
-    titlePanel("San Francisco Criminal Offenses by District and Month"),
-    sidebarLayout(
-        sidebarPanel(
-            selectInput("districtInput","Select your district:", c("Bayview", "Central",
-                                                                   "Ingleside", "Mission",
-                                                                   "Northern", "Out of SF",
-                                                                   "Park", "Richmond",
-                                                                   "Southern", "Taraval",
-                                                                   "Tenderloin")),
-            selectInput("monthInput", "Select the time of year:", c("January", "February",
-                                                                    "March", "April",
-                                                                    "May", "June",
-                                                                    "July", "August",
-                                                                    "September", "October",
-                                                                    "November", "December")),
-            submitButton("Submit"),
-            h3("Is data available:"),
-            textOutput("check1")
-        ),
-        mainPanel(
-            leafletOutput("plot1"),
-            h3("Zoltar predicts the next crime in your district will be:"),
-            textOutput("predCrime")
+shinyServer(navbarPage(
+    "San Francisco Criminal Offenses",
+    
+    theme = shinytheme("sandstone"),
+    
+    tags$head(tags$style(HTML("
+        .selectize-input, .selectize-dropdown, .main-sidebar {
+          font-size: 100%;
+        }
+        "))),
+    
+    tabPanel("Overview",
+        sidebarLayout(
+            sidebarPanel(
+                selectInput("districtInput","Select your district:", c("Bayview", 
+                                                                       "Central",
+                                                                       "Ingleside", 
+                                                                       "Mission",
+                                                                       "Northern", 
+                                                                       "Park", 
+                                                                       "Richmond",
+                                                                       "Southern", 
+                                                                       "Taraval",
+                                                                       "Tenderloin")),
+                
+                submitButton("Submit"),
+                width = 3
+            ),
+            
+            mainPanel(
+                tabsetPanel(
+                    tabPanel("Map", plotOutput("plot1")),
+                    tabPanel("Chart", verbatimTextOutput("yarrr")),
+                    tabPanel("Graph", verbatimTextOutput("charrr"))),
+            )
         )
-    )
+    ),
+    
+    tabPanel("Inferential Stats",
+             
+    ),
+    
+    tabPanel("Predictions",
+    
+    ),
+    
+    navbarMenu("More",
+               tabPanel("Data Explorer",
+               
+               ),
+               tabPanel("Your Data",
+                        
+               ),
+               tabPanel("About",
+                        
+               ))
 ))
