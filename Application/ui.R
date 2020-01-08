@@ -15,30 +15,13 @@ shinyServer(navbarPage(
         "))),
     
     tabPanel("Overview",
-        sidebarLayout(
-            sidebarPanel(
-                selectInput("districtInput","Select your district:", c("Bayview", 
-                                                                       "Central",
-                                                                       "Ingleside", 
-                                                                       "Mission",
-                                                                       "Northern", 
-                                                                       "Park", 
-                                                                       "Richmond",
-                                                                       "Southern", 
-                                                                       "Taraval",
-                                                                       "Tenderloin")),
-                
-                submitButton("Submit"),
-                width = 3
-            ),
-            
             mainPanel(
                 tabsetPanel(
-                    tabPanel("Map", plotOutput("plot1")),
-                    tabPanel("Chart", verbatimTextOutput("yarrr")),
-                    tabPanel("Graph", verbatimTextOutput("charrr"))),
+                    tabPanel("Summary Statistics", verbatimTextOutput("yarrr")),
+                    tabPanel("Interactive Map", leafletOutput("overviewMap", 
+                                                  height = 850,
+                                                  width = 850)))
             )
-        )
     ),
     
     tabPanel("Inferential Stats",

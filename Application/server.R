@@ -4,9 +4,6 @@ library(tidyverse)
 library(RSQLite)
 library(DBI)
 library(leaflet)
-library(lubridate)
-library(caret)
-library(e1071)
 
 shinyServer(function(input, output){
     
@@ -15,7 +12,6 @@ shinyServer(function(input, output){
     dbPath <- "./sf_crime_db.sqlite"
     db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
     
-    # pull CPI actuals data
     sfCrime <- dbGetQuery(db, "SELECT 
                                     sum(incident_cnt) as cnt,
                                     latitude,
@@ -31,23 +27,21 @@ shinyServer(function(input, output){
     # disconnect from db
     dbDisconnect(db)
     
-    
-    # create the main plot
-    output$plot1 <- renderLeaflet({
-        sfCrimeFilt <- filter(sfCrime, police_district == input$districtInput)
-        
-        sfCrimeFilt <- na.omit(sfCrimeFilt)
+    # create overviewMap
+    output$overviewMap <- renderLeaflet({
         
         pal <- colorFactor(topo.colors(11), sfCrime$police_district)
         
-        sfCrimeFilt %>% 
+        sfCrime %>% 
             leaflet() %>% 
             addTiles() %>% 
             addCircles(weight = 12, 
-                       radius = sqrt(sfCrimeFilt$cnt) * 30,
+                       radius = sqrt(sfCrime$cnt) * 30,
                        color = ~ pal(police_district),
                        popup = ~ incident_category) %>% 
-            addMarkers(clusterOptions = markerClusterOptions())
+            addMarkers(clusterOptions = markerClusterOptions()) %>% 
+            addLegend(pal = pal, values = ~ police_district, 
+                      position = "bottomleft")
     })
     
 })
