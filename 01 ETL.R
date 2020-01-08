@@ -43,9 +43,6 @@ sfCrime <- sfCrime[!is.na(latitude) & !is.na(longitude), ]
 # Add an incident_cnt column
 sfCrime$incident_cnt <- 1
 
-# Add a date_pulled column
-sfCrime$date_pulled <- Sys.Date()
-
 # Remove columns
 sfCrime <- sfCrime[, -c("filed_online",
                         "cad_number",
@@ -78,11 +75,7 @@ sfCrime <- sfCrime[, c("incident_id_nbr_cd",
                        "incident_category",
                        "incident_subcategory",
                        "incident_description",
-                       "incident_cnt",
-                       "date_pulled")]
-
-# Convert to character for sqlite
-sfCrime <- sfCrime[, date_pulled := as.character(date_pulled)]
+                       "incident_cnt")]
 
 #===============================================================================
 # LOAD THE DATA INTO SQLITE
@@ -94,9 +87,8 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
 dbExecute(db, "CREATE TABLE incident_reports
-                (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                incident_id_nbr_cd TEXT NOT NULL,
-                incident_date TEXT,
+                (incident_id_nbr_cd TEXT NOT NULL,
+                incident_date TEXT NOT NULL,
                 incident_day_of_week TEXT,
                 incident_year TEXT,
                 report_date TEXT,
@@ -109,8 +101,7 @@ dbExecute(db, "CREATE TABLE incident_reports
                 incident_subcategory TEXT,
                 incident_description TEXT,
                 incident_cnt INTEGER,
-                date_pulled TEXT NOT NULL,
-                UNIQUE (incident_id_nbr_cd, date_pulled));")
+                UNIQUE (incident_id_nbr_cd, incident_date));")
 #-------------------------------------------------------------------------------
 
 load_data <- function(df) {
@@ -118,13 +109,13 @@ load_data <- function(df) {
     print("=====Uploading data to incident_reports table=====")
     # we want to add only the new combinations
     insertnew <- dbSendQuery(db, "INSERT OR IGNORE INTO incident_reports VALUES 
-                                    (NULL, :incident_id_nbr_cd, :incident_date,
+                                    (:incident_id_nbr_cd, :incident_date,
                                     :incident_day_of_week, :incident_year,
                                     :report_date, :police_district,
                                     :analysis_neighborhood, :latitude, :longitude,
                                     :report_type_description, :incident_category,
                                     :incident_subcategory, :incident_description,
-                                    :incident_cnt, :date_pulled);")
+                                    :incident_cnt);")
     dbBind(insertnew, params = df)  # execute
     dbClearResult(insertnew) # release the prepared statement
     
