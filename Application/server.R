@@ -1,5 +1,6 @@
 
 library(shiny)
+library(DT)
 library(tidyverse)
 library(data.table)
 library(lubridate)
@@ -197,6 +198,17 @@ shinyServer(function(input, output, session){
                 pctDistrictChart
             })
             
+            # percentage by district chart
+            output$ui_pctDistrictChart <- renderPlotly({
+                
+                plot_ly(x = pctDistrictChart()$police_district,
+                        y = pctDistrictChart()$pct,
+                        type = 'bar') %>% 
+                    layout(title = "Pct of Incidents by Police District",
+                           margin = list(t = 90,
+                                         size = 14))
+            })
+            
             # data for percentage day of week chart
             pctDayofweek <- reactive({
                 
@@ -237,17 +249,6 @@ shinyServer(function(input, output, session){
                 pctDayofweek
             })
             
-            # percentage by district chart
-            output$ui_pctDistrictChart <- renderPlotly({
-                
-                plot_ly(x = pctDistrictChart()$police_district,
-                        y = pctDistrictChart()$pct,
-                        type = 'bar') %>% 
-                    layout(title = "Pct of Incidents by Police District",
-                           margin = list(t = 90,
-                                         size = 14))
-            })
-            
             # percentage by day of week
             output$ui_pctDayofweek <- renderPlotly({
                 
@@ -259,6 +260,55 @@ shinyServer(function(input, output, session){
                            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
                            margin = list(t = 90,
                                          size = 14))
+                
+            })
+            
+            # data for summary tab metrics
+            sumTabData <- reactive({
+                
+                
+                if(input$pick_district == "All" &
+                   input$pick_offensetype == "All"){
+                    
+                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider,]
+                    
+                } else if(input$pick_district != "All" &
+                          input$pick_offensetype == "All"){
+                    
+                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider &
+                                              police_district == input$pick_district,]
+                    
+                } else if(input$pick_district == "All" &
+                          input$pick_offensetype != "All"){
+                    
+                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider &
+                                              incident_category == input$pick_offensetype,]
+                    
+                } else if(input$pick_district != "All" &
+                          input$pick_offensetype != "All"){
+                    
+                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider &
+                                              police_district == input$pick_district &
+                                              incident_category == input$pick_offensetype,]
+                    
+                }
+                
+                sumTabData
+            })
+            
+            # ui output for summary tab metrics
+            output$ui_sumtab <- renderDataTable({
+                
+                sumTabMetrics <- sumTabData()[,
+                                      .(`Total Incidents` = sum(cnt),
+                                        `Avg Incidents Per Day` = round(sum(cnt)/uniqueN(incident_date), 1),
+                                        `Types of Incidents Per Day` = uniqueN(incident_category)),
+                                      by = police_district]
+                
+                names(sumTabMetrics) <- c("Police District", "Total Incidents",
+                                          "Avg Incidents Per Day", "Types of Incidents Per Day")
+                
+                datatable(sumTabMetrics, rownames = FALSE) 
                 
             })
             

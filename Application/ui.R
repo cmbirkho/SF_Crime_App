@@ -1,6 +1,7 @@
 
 library(shiny)
 library(shinythemes)
+library(DT)
 library(leaflet)
 library(plotly)
 
@@ -26,22 +27,50 @@ shinyServer(navbarPage(
                  mainPanel(
                      
                      tabsetPanel(id = "overviewTabs",
-                         
-                         tabPanel(title = "Summary Statistics", value = 'overviewTab1',
-                                  
+                                 
+                                 tabPanel(title = "Summary Statistics", value = 'overviewTab1',
+                                          
+                                          tags$style(HTML("
+                                                .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, 
+                                                .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, 
+                                                .dataTables_wrapper .dataTables_paginate {
+                                                
+                                                color: #ffffff;
+                                                }
+                            
+                                                thead {
+                                                color: #ffffff;
+                                                }
+                            
+                                                tbody {
+                                                color: #000000;
+                                                 }
+                                                
+                                                table th {
+                                                text-align: center;
+                                                }
+                                                
+                                                table td {
+                                                text-align: center;
+                                                }
+                                               "
+                                          )),
+                                          
                                   fluidRow(
                                       
                                       splitLayout(cellWidths = c("50%", "50%"),
                                                   plotlyOutput("ui_pctDistrictChart",
                                                                width = "auto", height = "auto"),
                                                   plotlyOutput("ui_pctDayofweek",
-                                                               width = "auto", height = "auto"))
+                                                               width = "auto", height = "auto")),
+                                      
+                                      br(),
+                                      
+                                      dataTableOutput("ui_sumtab")
                                   )
                          ),
                          
                          tabPanel(title = "Interactive Map", value = 'overviewTab2',
-                                  
-                                  
                                   
                                   # include custom CSS
                                   div(class='outer',
