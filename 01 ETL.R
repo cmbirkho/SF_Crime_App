@@ -6,7 +6,7 @@ rm(list = ls())
 library(RSQLite)
 library(DBI)
 library(data.table)
-library(dplyr)
+library(tidyverse)
 
 #===============================================================================
 # EXTRACT
@@ -86,22 +86,22 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 # Set up incident_reports table
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
-dbExecute(db, "CREATE TABLE incident_reports
-                (incident_id_nbr_cd TEXT NOT NULL,
-                incident_date TEXT NOT NULL,
-                incident_day_of_week TEXT,
-                incident_year TEXT,
-                report_date TEXT,
-                police_district TEXT,
-                analysis_neighborhood TEXT,
-                latitude REAL,
-                longitude REAL,
-                report_type_description TEXT,
-                incident_category TEXT,
-                incident_subcategory TEXT,
-                incident_description TEXT,
-                incident_cnt INTEGER,
-                UNIQUE (incident_id_nbr_cd, incident_date));")
+# dbExecute(db, "CREATE TABLE incident_reports
+#                 (incident_id_nbr_cd TEXT NOT NULL,
+#                 incident_date TEXT NOT NULL,
+#                 incident_day_of_week TEXT,
+#                 incident_year TEXT,
+#                 report_date TEXT,
+#                 police_district TEXT,
+#                 analysis_neighborhood TEXT,
+#                 latitude REAL,
+#                 longitude REAL,
+#                 report_type_description TEXT,
+#                 incident_category TEXT,
+#                 incident_subcategory TEXT,
+#                 incident_description TEXT,
+#                 incident_cnt INTEGER,
+#                 UNIQUE (incident_id_nbr_cd, incident_date));")
 #-------------------------------------------------------------------------------
 
 load_data <- function(df) {

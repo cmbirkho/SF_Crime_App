@@ -10,65 +10,64 @@ shinyServer(navbarPage(
     theme = shinytheme("superhero"),
     
     tabPanel("Overview",
+             
              sidebarLayout(
+                 
                  sidebarPanel(width = 3,
                               
-                              selectInput("districtInput", 'District:',
-                                          list('All',
-                                               'Central',
-                                               'Richmond',
-                                               'Mission',
-                                               'Taraval',
-                                               'Ingleside',
-                                               'Southern',
-                                               'Bayview',
-                                               'Northern',
-                                               'Tenderloin',
-                                               'Park')),
+                              uiOutput("ui_districtList"),
                               
-                              sliderInput("dateSlider", "Date:",
-                                          min = as.Date("2018-01-01", "%Y-%m-%d"),
-                                          max = as.Date("2020-01-01", "%Y-%m-%d"),
-                                          value = as.Date("2018-01-01"))
+                              uiOutput("ui_dateslider"),
+                              
+                              uiOutput("ui_offensetypeList")
+                              
+                              
                  ),
-                 
                  mainPanel(
-                     tabsetPanel(type = 'tabs', id = "overviewTabs",
-                                 
-                                 tabPanel(title = "Summary Statistics", value = 'overviewTab1',
+                     
+                     tabsetPanel(id = "overviewTabs",
+                         
+                         tabPanel(title = "Summary Statistics", value = 'overviewTab1',
+                                  
+                                  fluidRow(
+                                      
+                                      splitLayout(cellWidths = c("50%", "50%"),
+                                                  plotlyOutput("ui_pctDistrictChart",
+                                                               width = "auto", height = "auto"),
+                                                  plotlyOutput("ui_pctDayofweek",
+                                                               width = "auto", height = "auto"))
+                                  )
+                         ),
+                         
+                         tabPanel(title = "Interactive Map", value = 'overviewTab2',
+                                  
+                                  
+                                  
+                                  # include custom CSS
+                                  div(class='outer',
+                                      
+                                      tags$head(
                                           
-                                          
-                                 ),
-                                 
-                                 tabPanel(title = "Interactive Map", value = 'overviewTab2',
-                                          
-                                          # include custom CSS
-                                          div(class='outer',
-                                              
-                                              tags$head(
-                                                  
-                                                  includeCSS("styles.css"),
-                                              ),
-                                              
-                                          ),
-                                          
-                                          leafletOutput("overviewMap", height = 1000, width = 1800),
-                                          
-                                          absolutePanel(id = 'controls', class = "panel panel-default",
-                                                        fixed = TRUE, draggable = TRUE, top = 'auto',
-                                                        left = 555, right = 'auto', bottom = 150,
-                                                        width = 330, height = 'auto',
-                                                        
-                                                        plotOutput("barChartMap", height = 400)
-                                          ),
-                                          
-                                          # tags$div(id="cite",
-                                          #          'Data was refreshed on ', tags$em('2020-01-07'))
-                                 )
+                                          includeCSS("styles.css"),
+                                      ),
+                                      
+                                  ),
+                                  
+                                  leafletOutput("overviewMap", height = 1000, width = 1500),
+                                  
+                                  absolutePanel(id = 'controls', class = "panel panel-default",
+                                                fixed = TRUE, draggable = TRUE, top = 'auto',
+                                                left = 555, right = 'auto', bottom = 150,
+                                                width = 400, height = 'auto',
+
+                                                plotOutput("barChartMap", height = 400)
+                                  )
+                                  
+                                  
+                         )
                      )
                  )
-             ),
-             
+             )
     ),
     
     tabPanel("Inferential Stats",
