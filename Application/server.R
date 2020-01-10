@@ -38,31 +38,6 @@ shinyServer(function(input, output, session){
                     selected = NULL, multiple = FALSE)
     })
     
-    # create dayofweekList for select inputs
-    dayofweekList <- reactive({
-        
-        dbPath <- "./sf_crime_db.sqlite"
-        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-        
-        dayofweekList <- dbGetQuery(db,  "SELECT
-                                                distinct(incident_day_of_week)
-                                            FROM incident_reports
-                                            ORDER BY incident_day_of_week;")
-        
-        dbDisconnect(db)
-        
-        dayofweekList <- dayofweekList$incident_day_of_week
-        dayofweekList
-    })
-    
-    # ui output for dayofweekList
-    output$ui_dayofweekList <- renderUI({
-        selectInput("pick_dayofweek",
-                    label = "Day of week:",
-                    choices = c("All", dayofweekList()),
-                    selected = NULL, multiple = FALSE)
-    })
-    
     # create offensetypeList for select inputs
     offensetypeList <- reactive({
         
@@ -83,7 +58,7 @@ shinyServer(function(input, output, session){
     # ui output for offensetypeList
     output$ui_offensetypeList <- renderUI({
         selectInput("pick_offensetype",
-                    label = "Incident Type:",
+                    label = "Incident Category:",
                     choices = c("All", offensetypeList()),
                     selected = NULL, multiple = FALSE)
     })
@@ -205,7 +180,7 @@ shinyServer(function(input, output, session){
             # percentage by district chart
             output$ui_pctDistrictChart <- renderPlotly({
                 
-                pctDistrict <- pctData()[, .(pct = sum(cnt)/totalIncidents()),
+                pctDistrict <- pctData()[, .(pct = (sum(cnt)/totalIncidents()) * 100),
                                          by = police_district]
                 
                 plot_ly(x = pctDistrict$police_district,
@@ -213,7 +188,10 @@ shinyServer(function(input, output, session){
                         type = 'bar') %>% 
                     layout(title = "Pct of Incidents by Police District",
                            margin = list(t = 90,
-                                         size = 14))
+                                         size = 14),
+                           paper_bgcolor = 'transparent',
+                           plot_bgcolor = 'transparent',
+                           font = list(color = '#ffffff'))
             })
             
             # percentage by day of week
@@ -229,8 +207,48 @@ shinyServer(function(input, output, session){
                            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
                            yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
                            margin = list(t = 90,
-                                         size = 14))
+                                         size = 14),
+                           paper_bgcolor = 'transparent',
+                           plot_bgcolor = 'transparent',
+                           font = list(color = '#ffffff'))
                 
+            })
+            
+            # box plots by day of week
+            output$ui_lineChart <- renderPlotly({
+                
+                cntDay <- pctData()[, .(cnt = sum(cnt)),
+                                    by = incident_date]
+               
+                plot_ly(pctData(),
+                        y = ~ cnt,
+                        x = ~ incident_date,
+                        type = 'scatter') %>% 
+                    layout(title = "Incidents...",
+                           margin = list(t = 90,
+                                         size = 14),
+                           paper_bgcolor = 'transparent',
+                           plot_bgcolor = 'transparent',
+                           font = list(color = '#ffffff'))
+                
+            })
+            
+            # incidents by category
+            output$ui_incidentCat <- renderPlotly({
+                
+                countIncid <- pctData()[, .(cnt = sum(cnt)),
+                                        by = incident_category]
+                
+                plot_ly(x = countIncid$cnt,
+                        y = countIncid$incident_category,
+                        type = 'bar',
+                        orientation = 'h') %>% 
+                    layout(title = "Incidents by Category",
+                           margin = list(t = 90,
+                                         size = 14),
+                           paper_bgcolor = 'transparent',
+                           plot_bgcolor = 'transparent',
+                           font = list(color = '#ffffff'))
             })
             
             # output values below charts
@@ -239,7 +257,7 @@ shinyServer(function(input, output, session){
                 totCnt <- sum(pctData()$cnt)
                 
                  valueBox(
-                    formatC(totCnt, format="d"),
+                    tags$p(formatC(totCnt, format="d"), style = "font-size: 90%"),
                     paste('Total incidents'),
                     width = NULL)
                 
@@ -250,8 +268,8 @@ shinyServer(function(input, output, session){
                 avgInc <- sum(pctData()$cnt)/uniqueN(pctData()$incident_date)
                 
                 valueBox(
-                    formatC(avgInc, format="f", digits = 1),
-                    paste('Avg Incidents Per Day'),
+                    tags$p(formatC(avgInc, format="f", digits = 1), style = "font-size: 90%"),
+                    paste('Incidents Per Day'),
                     width = NULL)
             })
             
@@ -259,28 +277,23 @@ shinyServer(function(input, output, session){
                 
                 crimInc <- pctData()[incident_category != 'Non-Criminal',]
                 crimInc <- sum(crimInc$cnt) / sum(pctData()$cnt)
-                crimInc <- paste(round(crimInc * 100, 1), "%")
+                crimInc <- paste(round(crimInc * 100, 0), "%")
                 
                 valueBox(
-                    crimInc,
+                    tags$p(crimInc, style = "font-size: 90%"),
                     paste('Criminal Incidents'),
                     width = NULL)
             })
             
-            output$value4 <- renderValueBox({
+            output$incidentCatMetric <- renderValueBox({
                 
-                topInc <- pctData()[, .(cnt = sum(cnt)),
-                                    by = incident_category] %>% 
-                    arrange(desc(cnt))
-                
-                topInc <- topInc$incident_category[[1]]
+                incCat <- uniqueN(pctData()$incident_category)
                 
                 valueBox(
-                    topInc,
-                    paste('Top Incident Type'),
+                    tags$p(incCat, style = "font-size: 90%"),
+                    paste('Incident Categories'),
                     width = NULL)
             })
-            
             
             #-------------------------------------------------------------------
             # interactive map tab

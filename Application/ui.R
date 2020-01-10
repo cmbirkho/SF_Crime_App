@@ -32,23 +32,29 @@ shinyServer(navbarPage(
                                  tabPanel(title = "Summary Statistics", value = 'overviewTab1',
                                           
                                           fluidRow(
+                                              column(width = 3,  valueBoxOutput("nbrIncidents")),
+                                              column(width = 3,  valueBoxOutput("avgNbrIncidents")),
+                                              column(width = 3,  valueBoxOutput("pctCriminal")),
+                                              column(width = 3,  valueBoxOutput("incidentCatMetric"))
+                                          ),
+                                          
+                                          br(),
+                                          
+                                          fluidRow(
                                               column(width = 6, plotlyOutput("ui_pctDistrictChart",
                                                                              width = "auto", height = "auto")),
                                               column(width = 6, plotlyOutput("ui_pctDayofweek",
                                                                              width = "auto", height = "auto"))
                                           ),
                                           br(),
-                                          br(),
+                                          
                                           fluidRow(
-                                              column(width = 4, valueBoxOutput("nbrIncidents")),
-                                              column(width = 4, valueBoxOutput("pctCriminal")),
-                                          ),
-                                          br(),
-                                          br(),
-                                          fluidRow(
-                                              column(width = 4, valueBoxOutput("avgNbrIncidents")),
-                                              column(width = 4, valueBoxOutput("value4"))
+                                              column(width = 6, plotlyOutput("ui_lineChart",
+                                                                             width = "auto", height = "auto")),
+                                              column(width = 6, plotlyOutput("ui_incidentCat",
+                                                                             width = "auto", height = "auto"))
                                           )
+                                          
                                           
                                  ),
                                  

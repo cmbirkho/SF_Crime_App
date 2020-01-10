@@ -66,3 +66,42 @@ output$barChartMap <- renderPlot({
         ylab("Count")
     
 })
+
+
+output$value4 <- renderValueBox({
+    
+    topInc <- pctData()[, .(cnt = sum(cnt)),
+                        by = incident_category] %>% 
+        arrange(desc(cnt))
+    
+    topInc <- topInc$incident_category[[1]]
+    
+    valueBox(
+        topInc,
+        paste('Top Incident Type'),
+        width = NULL)
+})
+
+# create dayofweekList for select inputs
+dayofweekList <- reactive({
+    
+    dbPath <- "./sf_crime_db.sqlite"
+    db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+    
+    dayofweekList <- dbGetQuery(db,  "SELECT
+                                                distinct(incident_day_of_week)
+                                            FROM incident_reports
+                                            ORDER BY incident_day_of_week;")
+    
+    dbDisconnect(db)
+    
+    dayofweekList <- dayofweekList$incident_day_of_week
+    dayofweekList
+})
+# ui output for dayofweekList
+output$ui_dayofweekList <- renderUI({
+    selectInput("pick_dayofweek",
+                label = "Day of week:",
+                choices = c("All", dayofweekList()),
+                selected = NULL, multiple = FALSE)
+})

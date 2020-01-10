@@ -126,3 +126,12 @@ load_data <- function(df) {
 }
 
 load_data(df = sfCrime)
+
+
+
+cntDay <- unique(sfCrimeData$police_district, sfCrimeData$analysis_neighborhood)
+
+sunChart <- sfCrimeData[, c("police_district",
+                          "analysis_neighborhood")]
+
+sunChart <- sunChart[!duplicated(sunChart), ]
