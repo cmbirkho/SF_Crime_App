@@ -1,6 +1,7 @@
 
 library(shiny)
 library(DT)
+library(shinydashboard)
 library(tidyverse)
 library(data.table)
 library(lubridate)
@@ -11,6 +12,7 @@ library(plotly)
 
 shinyServer(function(input, output, session){
     
+#-------------------------------------------------------------------------------
     # create districtList for select inputs
     districtList <- reactive({
         
@@ -81,7 +83,7 @@ shinyServer(function(input, output, session){
     # ui output for offensetypeList
     output$ui_offensetypeList <- renderUI({
         selectInput("pick_offensetype",
-                    label = "Offense Type:",
+                    label = "Incident Type:",
                     choices = c("All", offensetypeList()),
                     selected = NULL, multiple = FALSE)
     })
@@ -126,6 +128,7 @@ shinyServer(function(input, output, session){
                     value = as.Date(maxDate(), "%Y-%m-%d"))
     })
     
+#-------------------------------------------------------------------------------
     # observe event expression for OVERVIEW TABS
     observeEvent(input$overviewTabs, {
         
@@ -151,109 +154,76 @@ shinyServer(function(input, output, session){
                                             incident_date;")
         
         dbDisconnect(db)
-        setDT(sfCrimeData)
-        sfCrimeData[, incident_date := ymd(incident_date)]
-        totalIncidents <- sum(sfCrimeData$cnt)
+        setDT(sfCrimeData) # convert to data.table
+        sfCrimeData[, incident_date := ymd(incident_date)] # convert to date
         
+        #-----------------------------------------------------------------------
         # summary statistics tab
         if(input$overviewTabs == "overviewTab1"){
             
-            # data for percentage by district chart
-            pctDistrictChart <- reactive({
+            # reactive expression for total count of incidents
+            totalIncidents <- reactive({
+                
+                totalIncidents <- sfCrimeData[incident_date <= input$dateSlider,]
+                totalIncidents <- sum(totalIncidents$cnt)
+                totalIncidents
+            })
+            
+            
+            # data for percentage charts
+            pctData <- reactive({
                 
                 if(input$pick_district == "All" &
                    input$pick_offensetype == "All"){
                     
-                    pctDistrictChart <- sfCrimeData[incident_date <= input$dateSlider,
-                                                    .(pct = sum(cnt)/totalIncidents),
-                                                    by = police_district]
+                    pctData <- sfCrimeData[incident_date <= input$dateSlider,]
                     
                 } else if(input$pick_district != "All" &
                           input$pick_offensetype == "All"){
                     
-                    pctDistrictChart <- sfCrimeData[incident_date <= input$dateSlider &
-                                                        police_district == input$pick_district,
-                                                    .(pct = sum(cnt)/totalIncidents),
-                                                    by = police_district]
+                    pctData <- sfCrimeData[incident_date <= input$dateSlider &
+                                               police_district == input$pick_district,]
                     
                 } else if(input$pick_district == "All" &
                           input$pick_offensetype != "All"){
                     
-                    pctDistrictChart <- sfCrimeData[incident_date <= input$dateSlider &
-                                                        incident_category == input$pick_offensetype,
-                                                    .(pct = sum(cnt)/totalIncidents),
-                                                    by = police_district]
+                    pctData <- sfCrimeData[incident_date <= input$dateSlider &
+                                               incident_category == input$pick_offensetype,]
                     
                 } else if(input$pick_district != "All" &
                           input$pick_offensetype != "All"){
                     
-                    pctDistrictChart <- sfCrimeData[incident_date <= input$dateSlider &
-                                                        police_district == input$pick_district &
-                                                        incident_category == input$pick_offensetype,
-                                                    .(pct = sum(cnt)/totalIncidents),
-                                                    by = police_district]
+                    pctData <- sfCrimeData[incident_date <= input$dateSlider &
+                                               police_district == input$pick_district &
+                                               incident_category == input$pick_offensetype,]
                     
                 } 
                 
-                pctDistrictChart
+                pctData
             })
             
             # percentage by district chart
             output$ui_pctDistrictChart <- renderPlotly({
                 
-                plot_ly(x = pctDistrictChart()$police_district,
-                        y = pctDistrictChart()$pct,
+                pctDistrict <- pctData()[, .(pct = sum(cnt)/totalIncidents()),
+                                         by = police_district]
+                
+                plot_ly(x = pctDistrict$police_district,
+                        y = pctDistrict$pct,
                         type = 'bar') %>% 
                     layout(title = "Pct of Incidents by Police District",
                            margin = list(t = 90,
                                          size = 14))
             })
             
-            # data for percentage day of week chart
-            pctDayofweek <- reactive({
-                
-                if(input$pick_district == "All" &
-                   input$pick_offensetype == "All"){
-                    
-                    pctDayofweek <- sfCrimeData[incident_date <= input$dateSlider,
-                                                .(pct = sum(cnt)/totalIncidents),
-                                                by = incident_day_of_week]
-                    
-                } else if(input$pick_district != "All" &
-                          input$pick_offensetype == "All"){
-                    
-                    pctDayofweek <- sfCrimeData[incident_date <= input$dateSlider &
-                                                    police_district == input$pick_district,
-                                                .(pct = sum(cnt)/totalIncidents),
-                                                by = incident_day_of_week]
-                    
-                } else if(input$pick_district == "All" &
-                          input$pick_offensetype != "All"){
-                    
-                    pctDayofweek <- sfCrimeData[incident_date <= input$dateSlider &
-                                                    incident_category == input$pick_offensetype,
-                                                .(pct = sum(cnt)/totalIncidents),
-                                                by = incident_day_of_week]
-                    
-                } else if(input$pick_district != "All" &
-                          input$pick_offensetype != "All"){
-                    
-                    pctDayofweek <- sfCrimeData[incident_date <= input$dateSlider &
-                                                    police_district == input$pick_district &
-                                                    incident_category == input$pick_offensetype,
-                                                .(pct = sum(cnt)/totalIncidents),
-                                                by = incident_day_of_week]
-                    
-                } 
-                
-                pctDayofweek
-            })
-            
             # percentage by day of week
             output$ui_pctDayofweek <- renderPlotly({
                 
-                plot_ly(labels = ~ pctDayofweek()$incident_day_of_week,
-                        values = ~ pctDayofweek()$pct) %>% 
+                pctDay <- pctData()[, .(pct = sum(cnt)/totalIncidents()),
+                                    by = incident_day_of_week]
+                
+                plot_ly(labels = ~ pctDay$incident_day_of_week,
+                        values = ~ pctDay$pct) %>% 
                     add_pie(hole = 0.6) %>% 
                     layout(title = "Percent of Incidents by Day of Week",  showlegend = TRUE,
                            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -263,55 +233,56 @@ shinyServer(function(input, output, session){
                 
             })
             
-            # data for summary tab metrics
-            sumTabData <- reactive({
+            # output values below charts
+            output$nbrIncidents <- renderValueBox({
+               
+                totCnt <- sum(pctData()$cnt)
                 
-                
-                if(input$pick_district == "All" &
-                   input$pick_offensetype == "All"){
-                    
-                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider,]
-                    
-                } else if(input$pick_district != "All" &
-                          input$pick_offensetype == "All"){
-                    
-                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider &
-                                              police_district == input$pick_district,]
-                    
-                } else if(input$pick_district == "All" &
-                          input$pick_offensetype != "All"){
-                    
-                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider &
-                                              incident_category == input$pick_offensetype,]
-                    
-                } else if(input$pick_district != "All" &
-                          input$pick_offensetype != "All"){
-                    
-                    sumTabData <- sfCrimeData[incident_date <= input$dateSlider &
-                                              police_district == input$pick_district &
-                                              incident_category == input$pick_offensetype,]
-                    
-                }
-                
-                sumTabData
-            })
-            
-            # ui output for summary tab metrics
-            output$ui_sumtab <- renderDataTable({
-                
-                sumTabMetrics <- sumTabData()[,
-                                      .(`Total Incidents` = sum(cnt),
-                                        `Avg Incidents Per Day` = round(sum(cnt)/uniqueN(incident_date), 1),
-                                        `Types of Incidents Per Day` = uniqueN(incident_category)),
-                                      by = police_district]
-                
-                names(sumTabMetrics) <- c("Police District", "Total Incidents",
-                                          "Avg Incidents Per Day", "Types of Incidents Per Day")
-                
-                datatable(sumTabMetrics, rownames = FALSE) 
+                 valueBox(
+                    formatC(totCnt, format="d"),
+                    paste('Total incidents'),
+                    width = NULL)
                 
             })
             
+            output$avgNbrIncidents <- renderValueBox({
+                
+                avgInc <- sum(pctData()$cnt)/uniqueN(pctData()$incident_date)
+                
+                valueBox(
+                    formatC(avgInc, format="f", digits = 1),
+                    paste('Avg Incidents Per Day'),
+                    width = NULL)
+            })
+            
+            output$pctCriminal <- renderValueBox({
+                
+                crimInc <- pctData()[incident_category != 'Non-Criminal',]
+                crimInc <- sum(crimInc$cnt) / sum(pctData()$cnt)
+                crimInc <- paste(round(crimInc * 100, 1), "%")
+                
+                valueBox(
+                    crimInc,
+                    paste('Criminal Incidents'),
+                    width = NULL)
+            })
+            
+            output$value4 <- renderValueBox({
+                
+                topInc <- pctData()[, .(cnt = sum(cnt)),
+                                    by = incident_category] %>% 
+                    arrange(desc(cnt))
+                
+                topInc <- topInc$incident_category[[1]]
+                
+                valueBox(
+                    topInc,
+                    paste('Top Incident Type'),
+                    width = NULL)
+            })
+            
+            
+            #-------------------------------------------------------------------
             # interactive map tab
         } else if(input$overviewTabs == 'overviewTab2'){
             
@@ -364,25 +335,15 @@ shinyServer(function(input, output, session){
                                popup = ~ incident_category) %>%
                     addMarkers(clusterOptions = markerClusterOptions()) %>%
                     addLegend(pal = pal, values = ~ police_district,
-                              position = "topleft", title = "District")
+                              position = "topleft", title = "District") %>% 
+                    setView(lng = -122.431297, lat = 37.773972, zoom = 12)
             })
             
-            # create histMap
-            output$barChartMap <- renderPlot({
-                
-                ggplot(sfCrimeFiltMap(), aes(x = police_district, y = cnt)) +
-                    geom_bar(stat = 'identity', fill = 'green', alpha = 0.5) +
-                    theme(axis.text.x = element_text(size = 14, angle = 90),
-                          axis.text.y = element_text(size = 10),
-                          plot.title = element_text(hjust = 0.5)) +
-                    ggtitle("Incidents") +
-                    xlab(element_blank()) +
-                    ylab("Count")
-                
-            })
+            
             
         }
     })
+#-------------------------------------------------------------------------------
     
     
 })
