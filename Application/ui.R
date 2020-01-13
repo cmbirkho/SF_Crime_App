@@ -9,7 +9,7 @@ library(plotly)
 shinyServer(navbarPage(
     "San Francisco Criminal Offenses",
     
-    theme = shinytheme("superhero"),
+    theme = shinytheme("darkly"),
     
     tabPanel("Overview",
              
@@ -31,6 +31,12 @@ shinyServer(navbarPage(
                                  
                                  tabPanel(title = "Summary Statistics", value = 'overviewTab1',
                                           
+                                          # suppress red output error messages
+                                          tags$style(type="text/css",
+                                                     ".shiny-output-error { visibility: hidden; }",
+                                                     ".shiny-output-error:before { visibility: hidden; }"
+                                          ),
+                                          
                                           fluidRow(
                                               column(width = 3,  valueBoxOutput("nbrIncidents")),
                                               column(width = 3,  valueBoxOutput("avgNbrIncidents")),
@@ -49,9 +55,9 @@ shinyServer(navbarPage(
                                           br(),
                                           
                                           fluidRow(
-                                              column(width = 6, plotlyOutput("ui_lineChart",
-                                                                             width = "auto", height = "auto")),
                                               column(width = 6, plotlyOutput("ui_incidentCat",
+                                                                             width = "auto", height = "auto")),
+                                              column(width = 6, plotlyOutput("ui_theftValue",
                                                                              width = "auto", height = "auto"))
                                           )
                                           

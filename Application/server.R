@@ -118,7 +118,8 @@ shinyServer(function(input, output, session){
                                             police_district,
                                             incident_category,
                                             incident_day_of_week,
-                                            incident_date
+                                            incident_date,
+                                            incident_value
                                         FROM incident_reports
                                         GROUP BY
                                             latitude,
@@ -126,7 +127,8 @@ shinyServer(function(input, output, session){
                                             police_district,
                                             incident_category,
                                             incident_day_of_week,
-                                            incident_date;")
+                                            incident_date,
+                                            incident_value;")
         
         dbDisconnect(db)
         setDT(sfCrimeData) # convert to data.table
@@ -183,10 +185,15 @@ shinyServer(function(input, output, session){
                 pctDistrict <- pctData()[, .(pct = (sum(cnt)/totalIncidents()) * 100),
                                          by = police_district]
                 
+                pctDistrict$police_district <- factor(pctDistrict$police_district, 
+                                                      levels = unique(pctDistrict$police_district)[order(pctDistrict$pct, 
+                                                                                                         decreasing = TRUE)])
+                
                 plot_ly(x = pctDistrict$police_district,
                         y = pctDistrict$pct,
                         type = 'bar') %>% 
-                    layout(title = "Pct of Incidents by Police District",
+                    layout(title = "Percent of Incidents by Police District",
+                           yaxis = list(ticksuffix = "%"),
                            margin = list(t = 90,
                                          size = 14),
                            paper_bgcolor = 'transparent',
@@ -200,8 +207,19 @@ shinyServer(function(input, output, session){
                 pctDay <- pctData()[, .(pct = sum(cnt)/totalIncidents()),
                                     by = incident_day_of_week]
                 
+                
+                colors <- c('rgb(119,136,153)', 
+                            'rgb(105,105,105)', 
+                            'rgb(128,128,128)', 
+                            'rgb(169,169,169)', 
+                            'rgb(192,192,192)',
+                            'rgb(211,211,211)',
+                            'rgb(220,220,220)')
+                
+                
                 plot_ly(labels = ~ pctDay$incident_day_of_week,
-                        values = ~ pctDay$pct) %>% 
+                        values = ~ pctDay$pct,
+                        marker = list(colors = colors)) %>% 
                     add_pie(hole = 0.6) %>% 
                     layout(title = "Percent of Incidents by Day of Week",  showlegend = TRUE,
                            xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -214,17 +232,23 @@ shinyServer(function(input, output, session){
                 
             })
             
-            # box plots by day of week
-            output$ui_lineChart <- renderPlotly({
+            # larceny theft incident value
+            output$ui_theftValue <- renderPlotly({
                 
-                cntDay <- pctData()[, .(cnt = sum(cnt)),
-                                    by = incident_date]
-               
-                plot_ly(pctData(),
-                        y = ~ cnt,
-                        x = ~ incident_date,
-                        type = 'scatter') %>% 
-                    layout(title = "Incidents...",
+                cntTheft <- pctData()[incident_category == 'Larceny Theft', 
+                                      .(cnt = sum(cnt)),
+                                      by = incident_value]
+                
+                cntTheft$incident_value <- factor(cntTheft$incident_value, 
+                                                      levels = unique(cntTheft$incident_value)[order(cntTheft$cnt, 
+                                                                                                         decreasing = TRUE)])
+                
+                plot_ly(cntTheft,
+                        y = cntTheft$cnt,
+                        x = cntTheft$incident_value,
+                        type = 'bar') %>% 
+                    layout(title = "Larceny Theft Incidents by Value",
+                           yaxis = list(title = "Count"),
                            margin = list(t = 90,
                                          size = 14),
                            paper_bgcolor = 'transparent',
@@ -239,11 +263,16 @@ shinyServer(function(input, output, session){
                 countIncid <- pctData()[, .(cnt = sum(cnt)),
                                         by = incident_category]
                 
+                countIncid$incident_category <- factor(countIncid$incident_category, 
+                                                  levels = unique(countIncid$incident_category)[order(countIncid$cnt, 
+                                                                                                 decreasing = FALSE)])
+                
+                
                 plot_ly(x = countIncid$cnt,
                         y = countIncid$incident_category,
                         type = 'bar',
                         orientation = 'h') %>% 
-                    layout(title = "Incidents by Category",
+                    layout(title = "Count of Incidents by Category",
                            margin = list(t = 90,
                                          size = 14),
                            paper_bgcolor = 'transparent',
@@ -257,7 +286,7 @@ shinyServer(function(input, output, session){
                 totCnt <- sum(pctData()$cnt)
                 
                  valueBox(
-                    tags$p(formatC(totCnt, format="d"), style = "font-size: 90%"),
+                    tags$p(formatC(totCnt, format="d"), style = "font-size: 90%; color: #00CC66"),
                     paste('Total incidents'),
                     width = NULL)
                 
@@ -268,7 +297,7 @@ shinyServer(function(input, output, session){
                 avgInc <- sum(pctData()$cnt)/uniqueN(pctData()$incident_date)
                 
                 valueBox(
-                    tags$p(formatC(avgInc, format="f", digits = 1), style = "font-size: 90%"),
+                    tags$p(formatC(avgInc, format="f", digits = 1), style = "font-size: 90%; color: #00CC66"),
                     paste('Incidents Per Day'),
                     width = NULL)
             })
@@ -280,7 +309,7 @@ shinyServer(function(input, output, session){
                 crimInc <- paste(round(crimInc * 100, 0), "%")
                 
                 valueBox(
-                    tags$p(crimInc, style = "font-size: 90%"),
+                    tags$p(crimInc, style = "font-size: 90%; color: #00CC66"),
                     paste('Criminal Incidents'),
                     width = NULL)
             })
@@ -290,7 +319,7 @@ shinyServer(function(input, output, session){
                 incCat <- uniqueN(pctData()$incident_category)
                 
                 valueBox(
-                    tags$p(incCat, style = "font-size: 90%"),
+                    tags$p(incCat, style = "font-size: 90%; color: #00CC66"),
                     paste('Incident Categories'),
                     width = NULL)
             })
@@ -337,7 +366,7 @@ shinyServer(function(input, output, session){
             # create overviewMap
             output$overviewMap <- renderLeaflet({
                 
-                pal <- colorFactor(topo.colors(11), sfCrimeFiltMap()$police_district)
+                pal <- colorFactor("viridis", sfCrimeFiltMap()$police_district)
                 
                 sfCrimeFiltMap() %>%
                     leaflet() %>%
