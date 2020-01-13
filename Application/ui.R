@@ -7,7 +7,7 @@ library(leaflet)
 library(plotly)
 
 shinyServer(navbarPage(
-    "San Francisco Criminal Offenses",
+    "SF Police Incident Reports", id = 'navbarPages',
     
     theme = shinytheme("darkly"),
     
@@ -85,20 +85,117 @@ shinyServer(navbarPage(
     
     tabPanel("Inferential Stats",
              
+             fluidRow(
+                 
+               column(width = 12, 
+                      h1("Hypothesis Testing"),
+                      h3("Hypothesis:"),
+                      h4("Does the day of the week significantly impact the number of incidents?"),
+                      h5("HO: The mean under Friday and Saturday is less than or equal to the mean under Sunday-Thursday"),
+                      h5("HA: The mean under Friday and Saturday is greater than the mean under Sunday-Thursday"))
+             ),
+             
+             fluidRow(
+                 
+                 column(width = 12,
+                        
+                        mainPanel(
+                            
+                            tabsetPanel(id = 'inferenceTabs',
+                                        
+                                        tabPanel(title = "Distributions",
+                                                 
+                                                 # box plots
+                                                 # histogram 
+                                                 # density plot
+                                                 
+                                        ),
+                                        
+                                        tabPanel(title = "Tests",
+                                                 
+                                                 # t-tests and results
+                                        ),
+                                        
+                                        tabPanel(title = "Conclusions",
+                                                 
+                                                 # explanation of results
+                                        )
+                            )
+                        )
+                        
+                 )
+                 
+                 
+                 
+             )
+             
     ),
     
     tabPanel("Predictions",
              
     ),
     
-    navbarMenu("More",
-               tabPanel("Data Explorer",
+    tabPanel(title = "Data Download", value = 'dataExplorer',
+             
+             fluidRow(
+                 column(width = 12, downloadButton("downloadData", "Download"))
+             ),
+             
+             br(),
+             br(),
+             
+             fluidRow(
+                 
+                 tags$style(HTML("
+                        .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, 
+                        .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_processing, 
+                        .dataTables_wrapper .dataTables_paginate {
                         
-               ),
-               tabPanel("Your Data",
+                        color: #ffffff;
+                        }
+        
+                        thead {
+                        color: #ffffff;
+                        }
+        
+                        tbody {
+                        color: #000000;
+                         }
                         
-               ),
-               tabPanel("About",
+                        table th {
+                        text-align: center;
+                        }
                         
-               ))
+                        table td {
+                        text-align: center;
+                        }
+                        
+                        table td {
+                        font-size: 90%;
+                        }
+                        "
+                 )),
+                 
+                 
+                 column(width = 12, dataTableOutput("downloadTable"))
+             )
+    ),
+    
+    tabPanel("About",
+             
+             fluidRow(
+                 
+                 column(width = 12, 
+                        img(src = "seal.png", align = 'center'))
+             ),
+             
+             br(),
+             
+             fluidRow(
+                 
+                 column(width = 12,
+                        h4("Data source: ", uiOutput("sourceLink")))
+             )
+             
+    )
 ))

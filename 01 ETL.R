@@ -30,12 +30,15 @@ sfCrime <- sfCrime[,
                         report_date = str_sub(report_datetime, 1, 10))] %>% 
     .[,
       `:=`(incident_date = ymd(incident_date),
-           report_date = ymd(report_date))] %>% 
+           report_date = ymd(report_date),
+           incident_datetime = paste(incident_date, incident_time, sep = " "))] %>% 
   .[, incident_month := month(incident_date, abbr = TRUE, label = TRUE)] %>% 
   .[,
     `:=`(incident_month = as.character(incident_month),
          incident_date = as.character(incident_date),
-         report_date = as.character(report_date))]
+         report_date = as.character(report_date),
+         incident_datetime = as.POSIXct(incident_datetime, format = "%Y-%m-%d %H:%M"))] %>% 
+  .[, incident_datetime := as.character(incident_datetime)]
 
 # Remove all "@computed_region" columns
 colNm <- grep("@computed_region", names(sfCrime), value = TRUE)
@@ -65,7 +68,6 @@ sfCrime$incident_cnt <- 1
 # Remove columns
 sfCrime <- sfCrime[, -c("filed_online",
                         "cad_number",
-                        "incident_datetime", 
                         "report_datetime",
                         "incident_time",
                         "incident_id",
@@ -83,6 +85,7 @@ sfCrime <- sfCrime[, -c("filed_online",
 # Re-order columns
 sfCrime <- sfCrime[, c("incident_id_nbr_cd",
                        "incident_date",
+                       "incident_datetime",
                        "incident_day_of_week",
                        "incident_year",
                        "incident_month",
@@ -107,24 +110,25 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 # Set up incident_reports table
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
-dbExecute(db, "CREATE TABLE incident_reports
-                (incident_id_nbr_cd TEXT NOT NULL,
-                incident_date TEXT NOT NULL,
-                incident_day_of_week TEXT,
-                incident_year TEXT,
-                incident_month TEXT,
-                report_date TEXT,
-                police_district TEXT,
-                analysis_neighborhood TEXT,
-                latitude REAL,
-                longitude REAL,
-                report_type_description TEXT,
-                incident_category TEXT,
-                incident_subcategory TEXT,
-                incident_description TEXT,
-                incident_value TEXT,
-                incident_cnt INTEGER,
-                UNIQUE (incident_id_nbr_cd, incident_date));")
+# dbExecute(db, "CREATE TABLE incident_reports
+#                 (incident_id_nbr_cd TEXT NOT NULL,
+#                 incident_date TEXT NOT NULL,
+#                 incident_datetime TEXT,
+#                 incident_day_of_week TEXT,
+#                 incident_year TEXT,
+#                 incident_month TEXT,
+#                 report_date TEXT,
+#                 police_district TEXT,
+#                 analysis_neighborhood TEXT,
+#                 latitude REAL,
+#                 longitude REAL,
+#                 report_type_description TEXT,
+#                 incident_category TEXT,
+#                 incident_subcategory TEXT,
+#                 incident_description TEXT,
+#                 incident_value TEXT,
+#                 incident_cnt INTEGER,
+#                 UNIQUE (incident_id_nbr_cd, incident_date));")
 #-------------------------------------------------------------------------------
 
 load_data <- function(df) {
@@ -133,6 +137,7 @@ load_data <- function(df) {
     # we want to add only the new combinations
     insertnew <- dbSendQuery(db, "INSERT OR IGNORE INTO incident_reports VALUES 
                                     (:incident_id_nbr_cd, :incident_date,
+                                    :incident_datetime,
                                     :incident_day_of_week, :incident_year,
                                     :incident_month,
                                     :report_date, :police_district,

@@ -4,7 +4,7 @@ username:
 account: cmbirkho
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 1641896
-bundleId: 2717994
+appId: 1651880
+bundleId: 2725825
 url: https://cmbirkho.shinyapps.io/application/
-when: 1578605552.06607
+when: 1578938440.25217
