@@ -7,6 +7,7 @@ library(leaflet)
 library(plotly)
 
 shinyServer(navbarPage(
+    
     "SF Police Incident Reports", id = 'navbarPages',
     
     theme = shinytheme("darkly"),
@@ -29,7 +30,7 @@ shinyServer(navbarPage(
                      
                      tabsetPanel(id = "overviewTabs",
                                  
-                                 tabPanel(title = "Summary Statistics", value = 'overviewTab1',
+                                 tabPanel(title = "Summary Statistics", value = 'summaryStats',
                                           
                                           # suppress red output error messages
                                           tags$style(type="text/css",
@@ -64,7 +65,13 @@ shinyServer(navbarPage(
                                           
                                  ),
                                  
-                                 tabPanel(title = "Interactive Map", value = 'overviewTab2',
+                                 tabPanel(title = "Interactive Map", value = 'interactiveMap',
+                                          
+                                          fluidRow(
+                                              column(offset = 1, width = 4,  valueBoxOutput("mapNbrIncidents")),
+                                              column(width = 6,  valueBoxOutput("mapDistanceMet"))
+                                              
+                                          ),
                                           
                                           leafletOutput("overviewMap", height = 1000, width = 1500),
                                           
@@ -91,6 +98,7 @@ shinyServer(navbarPage(
                       h1("Hypothesis Testing"),
                       h3("Hypothesis:"),
                       h4("Does the day of the week significantly impact the number of incidents?"),
+                      br(),
                       h5("HO: The mean under Friday and Saturday is less than or equal to the mean under Sunday-Thursday"),
                       h5("HA: The mean under Friday and Saturday is greater than the mean under Sunday-Thursday"))
              ),
@@ -131,7 +139,70 @@ shinyServer(navbarPage(
              
     ),
     
-    tabPanel("Predictions",
+    tabPanel("Machine Learning",
+             
+             sidebarLayout(
+                 
+                 sidebarPanel(width = 3,
+                     
+                     selectInput("pick_model",
+                                 label = "Choose the model:",
+                                 choices = c(" ",
+                                             "Linear Regression",
+                                             "Logistic Regression",
+                                             "Random Forest"),
+                                 selected = NULL, multiple = FALSE)
+                     
+                     
+                 ),
+                 
+                 mainPanel(
+                     
+                 )
+             )
+             
+    ),
+    
+    tabPanel("Optimization",
+             
+             mainPanel(
+                 
+                 tabsetPanel(
+                     
+                     tabPanel("Problem Definition",
+                              
+                              h3("How do we minimize the number of officers needed on duty without sacrificing public safety?"),
+                              br(),
+                              h3("Assumptions:")
+                              
+                     ),
+                     
+                     tabPanel("Model Construction",
+                              
+                              
+                     ),
+                     
+                     tabPanel("Model Solution",
+                              sidebarLayout(
+                                  
+                                  sidebarPanel(
+                                      
+                                      h4("Model Inputs")
+                                      
+                                  ),
+                                  
+                                  mainPanel(
+                                      
+                                      h4("test")
+                                      
+                                  )
+                              )
+                              
+                     )
+                     
+                 )
+                 
+             )
              
     ),
     
@@ -181,7 +252,7 @@ shinyServer(navbarPage(
              )
     ),
     
-    tabPanel("About",
+    tabPanel("About", value = "aboutTab",
              
              fluidRow(
                  
@@ -194,8 +265,29 @@ shinyServer(navbarPage(
              fluidRow(
                  
                  column(width = 12,
-                        h4("Data source: ", uiOutput("sourceLink")))
-             )
+                        helpText("Data source:",a("click here", 
+                                                  href = "https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783")))
+                 
+             ),
              
+             br(),
+             
+             fluidRow(
+                 
+                 column(width = 6,
+                        h4("Due to inconsistencies in the data from the above data source.
+                           The data used in this project was filtered to incidents in October of 2019. 
+                           This accounts for 66% percent of all incident reports from this source."))
+             ),
+                 
+             br(),
+             
+             fluidRow(
+                 
+                 column(width = 4,
+                        plotlyOutput("aboutChart",
+                                     width = "auto", height = "auto"))
+             )
+ 
     )
 ))

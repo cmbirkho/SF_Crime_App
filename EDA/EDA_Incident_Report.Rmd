@@ -238,9 +238,19 @@ sfCrime <- sfCrime[, - "resolution"]
 ```
 
 ```{r}
-# Distribution of incidents by incident_category
+# Incidents by date
+byDate <- sfCrime[, .(cnt = sum(incident_cnt)),
+                  by = incident_date]
 
+byDate <- byDate[order(rank(incident_date)),]
 
+plot(byDate$incident_date, byDate$cnt)
+# the data looks incomplete. There are gaps when reports are coming in and then they stop
+# and then start again. The dates that look valid (i.e. reports are frequent) are 2018-10-05 to 2018-10-08 and 2019-09-29 to 2019-10-06 
+```
+
+```{r}
+# Time between incidents
 
 ```
 

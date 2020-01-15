@@ -27,3 +27,14 @@ What's the distance between two incidents?
 Based on the frequency of incidents and distance between points how many officers do you need on duty?
 
 https://stackoverflow.com/questions/32363998/function-to-calculate-geospatial-distance-between-two-points-lat-long-using-r
+
+
+Optimization
+https://towardsdatascience.com/linear-programming-in-r-444e9c199280
+- Distance b/w current incident and next incident in your police district
+- Resolve Speed: Time it takes to resolve an incident (report_datetime - incident_datetime)
+- Assumption that 2 officers work together
+- Travel Speed: Assumption that you can travel X meters per minute (something like that)
+- Total Active Time = (Total Distance / avg travel speed) + total resolve speed
+- Avg Resolve Time = (Total Distance / avg travel speed) + avg resolve speed
+- Officers Needed = Total Active Time / Avg Resolve Time

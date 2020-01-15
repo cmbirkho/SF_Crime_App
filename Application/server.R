@@ -5,6 +5,7 @@ library(shinydashboard)
 library(tidyverse)
 library(data.table)
 library(lubridate)
+library(geosphere)
 library(RSQLite)
 library(DBI)
 library(leaflet)
@@ -13,12 +14,7 @@ library(plotly)
 shinyServer(function(input, output, session){
     
 #-------------------------------------------------------------------------------
-    # url link for about page
-    output$sourceLink <- renderUI({
-        tagList("https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783")
-    })
-    
-    
+
     # create districtList for select inputs
     districtList <- reactive({
         
@@ -28,6 +24,8 @@ shinyServer(function(input, output, session){
         districtList <- dbGetQuery(db,  "SELECT
                                                 distinct(police_district)
                                             FROM incident_reports
+                                            WHERE incident_month = 'Oct'
+                                            AND incident_year = '2019'
                                             ORDER BY police_district;")
         
         dbDisconnect(db)
@@ -53,6 +51,8 @@ shinyServer(function(input, output, session){
         offensetypeList <- dbGetQuery(db,  "SELECT
                                                 distinct(incident_category)
                                             FROM incident_reports
+                                            WHERE incident_month = 'Oct'
+                                            AND incident_year = '2019'
                                             ORDER BY incident_category;")
         
         dbDisconnect(db)
@@ -77,7 +77,9 @@ shinyServer(function(input, output, session){
         
         maxDate <- dbGetQuery(db,  "SELECT
                                         MAX(DATE(incident_date)) as dt
-                                    FROM incident_reports;")
+                                    FROM incident_reports
+                                    WHERE incident_month = 'Oct'
+                                    AND incident_year = '2019';")
         
         dbDisconnect(db)
         
@@ -93,7 +95,9 @@ shinyServer(function(input, output, session){
         
         minDate <- dbGetQuery(db,  "SELECT
                                         MIN(DATE(incident_date)) as dt
-                                    FROM incident_reports;")
+                                    FROM incident_reports
+                                    WHERE incident_month = 'Oct'
+                                    AND incident_year = '2019';")
         
         dbDisconnect(db)
         
@@ -128,7 +132,9 @@ shinyServer(function(input, output, session){
                                             incident_datetime,
                                             incident_value,
                                             incident_cnt
-                                        FROM incident_reports;")
+                                        FROM incident_reports
+                                        WHERE incident_month = 'Oct'
+                                        AND incident_year = '2019';")
         
         dbDisconnect(db)
         setDT(sfCrimeData) # convert to data.table
@@ -139,7 +145,7 @@ shinyServer(function(input, output, session){
                                                         format = "%Y-%m-%d %H:%M:%S"))] 
         #-----------------------------------------------------------------------
         # summary statistics tab
-        if(input$overviewTabs == "overviewTab1"){
+        if(input$overviewTabs == "summaryStats"){
             
             # reactive expression for total count of incidents
             totalIncidents <- reactive({
@@ -271,14 +277,15 @@ shinyServer(function(input, output, session){
                 countIncid$incident_category <- factor(countIncid$incident_category, 
                                                   levels = unique(countIncid$incident_category)[order(countIncid$cnt, 
                                                                                                  decreasing = FALSE)])
-                
+                countIncid <- countIncid[order(-rank(cnt)),]
+                countIncid <- countIncid[1:10,]
                 
                 plot_ly(x = countIncid$cnt,
                         y = countIncid$incident_category,
                         type = 'bar',
                         orientation = 'h',
                         color = I('#1287A8')) %>% 
-                    layout(title = "Incidents by Category",
+                    layout(title = "Incidents by Category | Top 10",
                            xaxis = list(title = "Count"),
                            margin = list(t = 90,
                                          size = 14),
@@ -287,7 +294,7 @@ shinyServer(function(input, output, session){
                            font = list(color = '#ffffff'))
             })
             
-            # output values below charts
+            # output values above charts
             output$nbrIncidents <- renderValueBox({
                
                 totCnt <- sum(pctData()$incident_cnt)
@@ -332,7 +339,7 @@ shinyServer(function(input, output, session){
                 timeBw$time_bw_nxt_incident <- difftime(timeBw$nxt_incident, timeBw$incident_datetime,
                                                         units = "mins")
                 timeBw$time_bw_nxt_incident <- as.numeric(timeBw$time_bw_nxt_incident)
-                timeBw <- median(timeBw$time_bw_nxt_incident) # using median to exclude outliers
+                timeBw <- round(median(timeBw$time_bw_nxt_incident),0) # using median to exclude outliers
                 timeBw <- paste(timeBw, "min", sep = " ")
                 
                 valueBox(
@@ -342,74 +349,109 @@ shinyServer(function(input, output, session){
             })
             
             #-------------------------------------------------------------------
+            
             # interactive map tab
-        } else if(input$overviewTabs == 'overviewTab2'){
+        } else if(input$overviewTabs == 'interactiveMap'){
             
             # reactive expression to get and change data
-            sfCrimeFiltMap <- reactive({
-                
-                sfCrimeData <- sfCrimeData[, incident_date := ymd(incident_date)]
-                
+            sfCrimeFilt <- reactive({
                 
                 if(input$pick_district == "All" &
                    input$pick_offensetype == "All"){
                     
-                    sfCrimeFiltMap <- sfCrimeData[incident_date <= input$dateSlider,
-                                                  .(cnt = sum(incident_cnt)),
-                                                  by = .(latitude,
-                                                         longitude,
-                                                         police_district,
-                                                         incident_category)]
+                    sfCrimeFilt <- sfCrimeData[incident_date <= input$dateSlider,]
                     
                 } else if(input$pick_district != "All" &
                           input$pick_offensetype == "All"){
                     
-                    sfCrimeFiltMap <- sfCrimeData[incident_date <= input$dateSlider &
-                                                 police_district == input$pick_district,
-                                                 .(cnt = sum(incident_cnt)),
-                                                 by = .(latitude,
-                                                        longitude,
-                                                        police_district,
-                                                        incident_category)]
+                    sfCrimeFilt <- sfCrimeData[incident_date <= input$dateSlider &
+                                                 police_district == input$pick_district,]
                     
                 } else if(input$pick_district == "All" &
                           input$pick_offensetype != "All"){
                     
-                    sfCrimeFiltMap <- sfCrimeData[incident_date <= input$dateSlider &
-                                                 incident_category == input$pick_offensetype,
-                                                 .(cnt = sum(incident_cnt)),
-                                                 by = .(latitude,
-                                                        longitude,
-                                                        police_district,
-                                                        incident_category)]
+                    sfCrimeFilt <- sfCrimeData[incident_date <= input$dateSlider &
+                                                 incident_category == input$pick_offensetype,]
                     
                 } else if(input$pick_district != "All" &
                           input$pick_offensetype != "All"){
                     
-                    sfCrimeFiltMap <- sfCrimeData[incident_date <= input$dateSlider &
+                    sfCrimeFilt <- sfCrimeData[incident_date <= input$dateSlider &
                                                  police_district == input$pick_district &
-                                                 incident_category == input$pick_offensetype,
-                                                 .(cnt = sum(incident_cnt)),
-                                                 by = .(latitude,
-                                                        longitude,
-                                                        police_district,
-                                                        incident_category)]
+                                                 incident_category == input$pick_offensetype,]
                     
                 } 
                 
-                sfCrimeFiltMap
+                sfCrimeFilt
+            })
+            
+            # number of incidents for map
+            output$mapNbrIncidents <- renderValueBox({
+                
+                totCntMap <- sum(sfCrimeFilt()$incident_cnt)
+                
+                valueBox(
+                    tags$p(formatC(totCntMap, format="d"), style = "font-size: 90%; color: #EBC944"),
+                    paste('Total incidents'),
+                    width = NULL)
+                
+            })
+            
+            # distance to next incident
+            output$mapDistanceMet <- renderValueBox({
+                
+                distBw <- sfCrimeFilt()[, c("incident_id_nbr_cd",
+                                            "incident_datetime",
+                                            "latitude",
+                                            "longitude")]
+                
+                distBw <- distBw[order(rank(incident_datetime)),]
+                distBw$nxt_lat <- lead(distBw$latitude, n = 1)
+                distBw$nxt_lon <- lead(distBw$longitude, n = 1)
+                
+                distBw <- na.omit(distBw)
+                
+                dist.Meters <- function(data){
+                    
+                    for(i in 1:nrow(data)){
+                        data$distance_meters[i] <- distm(c(distBw$longitude[i], distBw$latitude[i]),
+                                                         c(distBw$nxt_lon[i], distBw$nxt_lat[i]),
+                                                         fun = distHaversine)
+                    }
+                    
+                    return(data)
+                }
+                
+                distBw <- dist.Meters(data = distBw)
+                
+                distBw <- round(mean(distBw$distance_meters) / 1609.34, 2)
+                
+                distBw <- paste(distBw, "mi", sep = " ")
+                
+                valueBox(
+                    tags$p(distBw, style = "font-size: 90%; color: #EBC944"),
+                    paste('Distance b/w Incidents'),
+                    width = NULL)
+                
             })
             
             # create overviewMap
             output$overviewMap <- renderLeaflet({
                 
-                pal <- colorFactor("viridis", sfCrimeFiltMap()$police_district)
+                sfCrimeFiltMap <- sfCrimeFilt()[, .(cnt = sum(incident_cnt)),
+                                              by = .(latitude,
+                                                     longitude,
+                                                     police_district,
+                                                     incident_category)]
                 
-                sfCrimeFiltMap() %>%
+                
+                pal <- colorFactor("viridis", sfCrimeFiltMap$police_district)
+                
+                sfCrimeFiltMap %>%
                     leaflet() %>%
                     addTiles() %>%
                     addCircles(weight = 12,
-                               radius = sqrt(sfCrimeFiltMap()$cnt) * 30,
+                               radius = sqrt(sfCrimeFiltMap$cnt) * 30,
                                color = ~ pal(police_district),
                                popup = ~ incident_category) %>%
                     addMarkers(clusterOptions = markerClusterOptions()) %>%
@@ -424,7 +466,7 @@ shinyServer(function(input, output, session){
     })
 #-------------------------------------------------------------------------------
     
-    # observe event for DATA EXPLORER tab
+    # observe event for DATA DOWNLOAD tab
     observeEvent(input$navbarPages == 'dataExplorer' ,{
         
         # pull the data 
@@ -441,8 +483,12 @@ shinyServer(function(input, output, session){
                                             incident_date,
                                             incident_datetime,
                                             incident_value,
+                                            report_date,
+                                            report_datetime,
                                             incident_cnt
-                                        FROM incident_reports;")
+                                        FROM incident_reports
+                                        WHERE incident_month = 'Oct'
+                                        AND incident_year = '2019';")
         
         dbDisconnect(db)
         setDT(sfCrimeDataDld) # convert to data.table
@@ -468,9 +514,50 @@ shinyServer(function(input, output, session){
         
     })
     
-    
-    
-    
 #-------------------------------------------------------------------------------
     
+    # observe event for ABOUT tab
+    observeEvent(input$navbarPages == "aboutTab", {
+        
+        # pull the data 
+        dbPath <- "./sf_crime_db.sqlite"
+        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+        
+        aboutData <- dbGetQuery(db,   "SELECT 
+                                            100 * SUM(incident_cnt) / (SELECT COUNT(*) FROM incident_reports) AS pct,
+                                            incident_month,
+                                            incident_year
+                                        FROM incident_reports
+                                        GROUP BY 
+                                            incident_month,
+                                            incident_year;")
+        
+        dbDisconnect(db)
+        setDT(aboutData)
+        
+        aboutData <- dcast(aboutData, incident_month ~ incident_year,
+                            value.var = "pct")
+        
+        output$aboutChart <- renderPlotly({
+            
+            plot_ly(x = aboutData$incident_month,
+                    y = aboutData$`2018`,
+                    type = 'bar',
+                    name = "2018",
+                    color = I('#004c6d')) %>%
+                add_trace(y = aboutData$`2019`, 
+                          name = "2019",
+                          color = I('#c1ffff')) %>%
+                layout(title = "Percent of Incidents by Month & Year",
+                       yaxis = list(ticksuffix = "%"),
+                       margin = list(t = 90,
+                                     size = 14),
+                       paper_bgcolor = 'transparent',
+                       plot_bgcolor = 'transparent',
+                       font = list(color = '#ffffff'))
+
+        })
+        
+    })
+#-------------------------------------------------------------------------------
 })
