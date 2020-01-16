@@ -8,114 +8,110 @@ library(lubridate)
 library(geosphere)
 library(RSQLite)
 library(DBI)
+library(gridExtra)
 library(leaflet)
 library(plotly)
+
 
 shinyServer(function(input, output, session){
     
 #-------------------------------------------------------------------------------
-
-    # create districtList for select inputs
-    districtList <- reactive({
-        
-        dbPath <- "./sf_crime_db.sqlite"
-        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-        
-        districtList <- dbGetQuery(db,  "SELECT
-                                                distinct(police_district)
-                                            FROM incident_reports
-                                            WHERE incident_month = 'Oct'
-                                            AND incident_year = '2019'
-                                            ORDER BY police_district;")
-        
-        dbDisconnect(db)
-        
-        districtList <- districtList$police_district
-        districtList
-    })
+# this section of server code is reserved for non observeEvent code
     
-    # ui output for districtList
-    output$ui_districtList <- renderUI({
-        selectInput("pick_district",
-                    label = "Police District:",
-                    choices = c("All", districtList()),
-                    selected = NULL, multiple = FALSE)
-    })
-    
-    # create offensetypeList for select inputs
-    offensetypeList <- reactive({
-        
-        dbPath <- "./sf_crime_db.sqlite"
-        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-        
-        offensetypeList <- dbGetQuery(db,  "SELECT
-                                                distinct(incident_category)
-                                            FROM incident_reports
-                                            WHERE incident_month = 'Oct'
-                                            AND incident_year = '2019'
-                                            ORDER BY incident_category;")
-        
-        dbDisconnect(db)
-        
-        offensetypeList <- offensetypeList$incident_category
-        offensetypeList
-    })
-    
-    # ui output for offensetypeList
-    output$ui_offensetypeList <- renderUI({
-        selectInput("pick_offensetype",
-                    label = "Incident Category:",
-                    choices = c("All", offensetypeList()),
-                    selected = NULL, multiple = FALSE)
-    })
-    
-    # get maxdate for slider
-    maxDate <- reactive({
-        
-        dbPath <- "./sf_crime_db.sqlite"
-        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-        
-        maxDate <- dbGetQuery(db,  "SELECT
-                                        MAX(DATE(incident_date)) as dt
-                                    FROM incident_reports
-                                    WHERE incident_month = 'Oct'
-                                    AND incident_year = '2019';")
-        
-        dbDisconnect(db)
-        
-        maxDate <- maxDate$dt
-        maxDate
-    })
-    
-    # get mindate for slider 
-    minDate <- reactive({
-        
-        dbPath <- "./sf_crime_db.sqlite"
-        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-        
-        minDate <- dbGetQuery(db,  "SELECT
-                                        MIN(DATE(incident_date)) as dt
-                                    FROM incident_reports
-                                    WHERE incident_month = 'Oct'
-                                    AND incident_year = '2019';")
-        
-        dbDisconnect(db)
-        
-        minDate <- minDate$dt
-        minDate
-    })
-    
-    # ui output for dates
-    output$ui_dateslider <- renderUI({
-        sliderInput("dateSlider", "Date:",
-                    min = as.Date(minDate(), "%Y-%m-%d"),
-                    max = as.Date(maxDate(), "%Y-%m-%d"),
-                    value = as.Date(maxDate(), "%Y-%m-%d"))
-    })
     
 #-------------------------------------------------------------------------------
     # observe event expression for OVERVIEW TABS
     observeEvent(input$overviewTabs, {
+        
+        # create districtList for select inputs
+        districtList <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            districtList <- dbGetQuery(db,  "SELECT
+                                                distinct(police_district)
+                                            FROM incident_reports
+                                            ORDER BY police_district;")
+            
+            dbDisconnect(db)
+            
+            districtList <- districtList$police_district
+            districtList
+        })
+        
+        # ui output for districtList
+        output$ui_districtList <- renderUI({
+            selectInput("pick_district",
+                        label = "Police District:",
+                        choices = c("All", districtList()),
+                        selected = NULL, multiple = FALSE)
+        })
+        
+        # create offensetypeList for select inputs
+        offensetypeList <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            offensetypeList <- dbGetQuery(db,  "SELECT
+                                                distinct(incident_category)
+                                            FROM incident_reports
+                                            ORDER BY incident_category;")
+            
+            dbDisconnect(db)
+            
+            offensetypeList <- offensetypeList$incident_category
+            offensetypeList
+        })
+        
+        # ui output for offensetypeList
+        output$ui_offensetypeList <- renderUI({
+            selectInput("pick_offensetype",
+                        label = "Incident Category:",
+                        choices = c("All", offensetypeList()),
+                        selected = NULL, multiple = FALSE)
+        })
+        
+        # get maxdate for slider
+        maxDate <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            maxDate <- dbGetQuery(db,  "SELECT
+                                        MAX(DATE(incident_date)) as dt
+                                    FROM incident_reports;")
+            
+            dbDisconnect(db)
+            
+            maxDate <- maxDate$dt
+            maxDate
+        })
+        
+        # get mindate for slider 
+        minDate <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            minDate <- dbGetQuery(db,  "SELECT
+                                        MIN(DATE(incident_date)) as dt
+                                    FROM incident_reports;")
+            
+            dbDisconnect(db)
+            
+            minDate <- minDate$dt
+            minDate
+        })
+        
+        # ui output for dates
+        output$ui_dateslider <- renderUI({
+            sliderInput("dateSlider", "Date:",
+                        min = as.Date(minDate(), "%Y-%m-%d"),
+                        max = as.Date(maxDate(), "%Y-%m-%d"),
+                        value = as.Date(maxDate(), "%Y-%m-%d"))
+        })
         
         # pull the data used on overview tabs
         dbPath <- "./sf_crime_db.sqlite"
@@ -132,9 +128,7 @@ shinyServer(function(input, output, session){
                                             incident_datetime,
                                             incident_value,
                                             incident_cnt
-                                        FROM incident_reports
-                                        WHERE incident_month = 'Oct'
-                                        AND incident_year = '2019';")
+                                        FROM incident_reports;")
         
         dbDisconnect(db)
         setDT(sfCrimeData) # convert to data.table
@@ -156,7 +150,7 @@ shinyServer(function(input, output, session){
             })
             
             
-            # data for percentage charts
+            # reactive expression to change data based on inputs
             pctData <- reactive({
                 
                 if(input$pick_district == "All" &
@@ -339,7 +333,7 @@ shinyServer(function(input, output, session){
                 timeBw$time_bw_nxt_incident <- difftime(timeBw$nxt_incident, timeBw$incident_datetime,
                                                         units = "mins")
                 timeBw$time_bw_nxt_incident <- as.numeric(timeBw$time_bw_nxt_incident)
-                timeBw <- round(median(timeBw$time_bw_nxt_incident),0) # using median to exclude outliers
+                timeBw <- round(mean(timeBw$time_bw_nxt_incident),0) # using median to exclude outliers
                 timeBw <- paste(timeBw, "min", sep = " ")
                 
                 valueBox(
@@ -353,7 +347,7 @@ shinyServer(function(input, output, session){
             # interactive map tab
         } else if(input$overviewTabs == 'interactiveMap'){
             
-            # reactive expression to get and change data
+            # reactive expression change data based on inputs
             sfCrimeFilt <- reactive({
                 
                 if(input$pick_district == "All" &
@@ -383,18 +377,6 @@ shinyServer(function(input, output, session){
                 } 
                 
                 sfCrimeFilt
-            })
-            
-            # number of incidents for map
-            output$mapNbrIncidents <- renderValueBox({
-                
-                totCntMap <- sum(sfCrimeFilt()$incident_cnt)
-                
-                valueBox(
-                    tags$p(formatC(totCntMap, format="d"), style = "font-size: 90%; color: #EBC944"),
-                    paste('Total incidents'),
-                    width = NULL)
-                
             })
             
             # distance to next incident
@@ -430,7 +412,7 @@ shinyServer(function(input, output, session){
                 
                 valueBox(
                     tags$p(distBw, style = "font-size: 90%; color: #EBC944"),
-                    paste('Distance b/w Incidents'),
+                    paste('Avg Distance Between Incidents'),
                     width = NULL)
                 
             })
@@ -457,7 +439,7 @@ shinyServer(function(input, output, session){
                     addMarkers(clusterOptions = markerClusterOptions()) %>%
                     addLegend(pal = pal, values = ~ police_district,
                               position = "topleft", title = "District") %>% 
-                    setView(lng = -122.431297, lat = 37.773972, zoom = 12)
+                    setView(lng = -122.431297, lat = 37.6879, zoom = 12)
             })
             
             
@@ -465,7 +447,160 @@ shinyServer(function(input, output, session){
         }
     })
 #-------------------------------------------------------------------------------
+    # observe event for INFERENTIAL STATS tab
+    observeEvent(input$navbarPages == "inferentialStats", {
+        
+        # create districtList for select inputs
+        isDistrictList <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            isDistrictList <- dbGetQuery(db,  "SELECT
+                                                distinct(police_district)
+                                            FROM ml_data_incidents
+                                            ORDER BY police_district;")
+            
+            dbDisconnect(db)
+            
+            isDistrictList <- isDistrictList$police_district
+            isDistrictList
+        })
+        
+        # ui output for districtList
+        output$ui_isDistrictList <- renderUI({
+            selectInput("is_pick_district",
+                        label = "Police District:",
+                        choices = c(isDistrictList()),
+                        selected = NULL, multiple = FALSE)
+        })
+        
+        # pull the data used for this tab
+        isData <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            isData <- dbGetQuery(db,  "SELECT *
+                                            FROM ml_data_incidents;")
+            
+            dbDisconnect(db)
+            
+            setDT(isData)
+            
+            isData <- isData[police_district %in% input$is_pick_district,]
+            
+            isData
+            
+        })
+        
+        # histogram
+        output$isHistogram <- renderPlotly({
+            
+            plot_ly(isData(),
+                    alpha = 0.7,
+                    x = ~ min_to_nxt_incident,
+                    type = "histogram",
+                    color = I('#1287A8')) %>% 
+            layout(title = "Distribution of Minutes Between Incidents",
+                   xaxis = list(title = "Minutes"),
+                   yaxis = list(title = "Frequency"),
+                   margin = list(t = 135,
+                                 size = 14),
+                   paper_bgcolor = 'transparent',
+                   plot_bgcolor = 'transparent',
+                   font = list(color = '#ffffff'))
+            
+        })
+        
+        # boxplot
+        output$isBoxPlot <- renderPlotly({
+            
+            plot_ly(isData(),
+                    y = ~ min_to_nxt_incident,
+                    color = ~ incident_day_of_week,
+                    type = "box") %>% 
+                layout(title = "Minutes Between Incidents by Day of Week",
+                       showlegend = FALSE,
+                       xaxis = list(title = " "),
+                       yaxis = list(title = "Minutes"),
+                       margin = list(t = 90,
+                                     size = 14),
+                       paper_bgcolor = 'transparent',
+                       plot_bgcolor = 'transparent',
+                       font = list(color = '#ffffff'))
+            
+        })
+        
+        
+    })
     
+#-------------------------------------------------------------------------------
+    # observe event for MACHINE LEARNING tab
+    observeEvent(input$navbarPages == "machineLearning", {
+        
+        # create districtList for select inputs
+        mlDistrictList <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            mlDistrictList <- dbGetQuery(db,  "SELECT
+                                                distinct(police_district)
+                                            FROM incident_reports
+                                            ORDER BY police_district;")
+            
+            dbDisconnect(db)
+            
+            mlDistrictList <- mlDistrictList$police_district
+            mlDistrictList
+        })
+        
+        # ui output for districtList
+        output$ml_ui_districtList <- renderUI({
+            selectInput("ml_pick_district",
+                        label = "Police District:",
+                        choices = c(mlDistrictList()),
+                        selected = NULL, multiple = FALSE)
+        })
+        
+        # create dayOfWeekList for select inputs
+        mlDayOfweekList <- reactive({
+            
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            mlDayOfweekList <- dbGetQuery(db,  "SELECT
+                                                distinct(incident_day_of_week)
+                                            FROM incident_reports
+                                            ORDER BY police_district;")
+            
+            dbDisconnect(db)
+            
+            mlDayOfweekList <- mlDayOfweekList$incident_day_of_week
+            mlDayOfweekList
+        })
+        
+        # ui output for districtList
+        output$ml_ui_dayOfweekList <- renderUI({
+            selectInput("ml_day_of_week",
+                        label = "Day of week:",
+                        choices = c(mlDayOfweekList()),
+                        selected = NULL, multiple = FALSE)
+        })
+        
+    })
+    
+#-------------------------------------------------------------------------------
+    # observe event for OPTIMIZATION tab
+    observeEvent(input$navbarPages == "optimize", {
+        
+        
+        
+        
+    })
+    
+#-------------------------------------------------------------------------------
     # observe event for DATA DOWNLOAD tab
     observeEvent(input$navbarPages == 'dataExplorer' ,{
         
@@ -486,9 +621,7 @@ shinyServer(function(input, output, session){
                                             report_date,
                                             report_datetime,
                                             incident_cnt
-                                        FROM incident_reports
-                                        WHERE incident_month = 'Oct'
-                                        AND incident_year = '2019';")
+                                        FROM incident_reports;")
         
         dbDisconnect(db)
         setDT(sfCrimeDataDld) # convert to data.table
@@ -519,45 +652,7 @@ shinyServer(function(input, output, session){
     # observe event for ABOUT tab
     observeEvent(input$navbarPages == "aboutTab", {
         
-        # pull the data 
-        dbPath <- "./sf_crime_db.sqlite"
-        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-        
-        aboutData <- dbGetQuery(db,   "SELECT 
-                                            100 * SUM(incident_cnt) / (SELECT COUNT(*) FROM incident_reports) AS pct,
-                                            incident_month,
-                                            incident_year
-                                        FROM incident_reports
-                                        GROUP BY 
-                                            incident_month,
-                                            incident_year;")
-        
-        dbDisconnect(db)
-        setDT(aboutData)
-        
-        aboutData <- dcast(aboutData, incident_month ~ incident_year,
-                            value.var = "pct")
-        
-        output$aboutChart <- renderPlotly({
-            
-            plot_ly(x = aboutData$incident_month,
-                    y = aboutData$`2018`,
-                    type = 'bar',
-                    name = "2018",
-                    color = I('#004c6d')) %>%
-                add_trace(y = aboutData$`2019`, 
-                          name = "2019",
-                          color = I('#c1ffff')) %>%
-                layout(title = "Percent of Incidents by Month & Year",
-                       yaxis = list(ticksuffix = "%"),
-                       margin = list(t = 90,
-                                     size = 14),
-                       paper_bgcolor = 'transparent',
-                       plot_bgcolor = 'transparent',
-                       font = list(color = '#ffffff'))
-
-        })
         
     })
-#-------------------------------------------------------------------------------
+#===============================================================================
 })

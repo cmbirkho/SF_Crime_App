@@ -68,8 +68,7 @@ shinyServer(navbarPage(
                                  tabPanel(title = "Interactive Map", value = 'interactiveMap',
                                           
                                           fluidRow(
-                                              column(offset = 1, width = 4,  valueBoxOutput("mapNbrIncidents")),
-                                              column(width = 6,  valueBoxOutput("mapDistanceMet"))
+                                              column(offset = 1, width = 11,  valueBoxOutput("mapDistanceMet"))
                                               
                                           ),
                                           
@@ -90,15 +89,15 @@ shinyServer(navbarPage(
              )
     ),
     
-    tabPanel("Inferential Stats",
+    tabPanel("Inferential Stats", value = "inferentialStats",
              
              fluidRow(
                  
                column(width = 12, 
-                      h1("Hypothesis Testing"),
-                      h3("Hypothesis:"),
-                      h4("Does the day of the week significantly impact the number of incidents?"),
+                      h4("Hypothesis: Does the day of the week significantly impact the time between incidents?"),
                       br(),
+                      h5("From the officer's perspective the time between incidents is relative to the geographic region they
+                          are stationed in. Taken this perspective into consideration we will analyze the following hypothesis by police district."),
                       h5("HO: The mean under Friday and Saturday is less than or equal to the mean under Sunday-Thursday"),
                       h5("HA: The mean under Friday and Saturday is greater than the mean under Sunday-Thursday"))
              ),
@@ -107,39 +106,60 @@ shinyServer(navbarPage(
                  
                  column(width = 12,
                         
-                        mainPanel(
+                        sidebarLayout(
                             
-                            tabsetPanel(id = 'inferenceTabs',
-                                        
-                                        tabPanel(title = "Distributions",
-                                                 
-                                                 # box plots
-                                                 # histogram 
-                                                 # density plot
-                                                 
-                                        ),
-                                        
-                                        tabPanel(title = "Tests",
-                                                 
-                                                 # t-tests and results
-                                        ),
-                                        
-                                        tabPanel(title = "Conclusions",
-                                                 
-                                                 # explanation of results
-                                        )
+                            sidebarPanel(width = 2,
+                                
+                                         uiOutput("ui_isDistrictList")
+                                
+                            ),
+                            
+                            
+                            mainPanel(
+                                
+                                tabsetPanel(id = 'inferenceTabs',
+                                            
+                                            tabPanel(title = "Distributions",
+                                                     
+                                                     fluidRow(
+                                                         
+                                                         column(width = 6,
+                                                                plotlyOutput("isHistogram",
+                                                                             width = 'auto', height = '400px')),
+                                                         br(),
+                                                         
+                                                         column(width = 6,
+                                                                plotlyOutput("isBoxPlot",
+                                                                             width = 'auto', height = '400px'))
+                                                         
+                                                     )
+                                            ),
+                                            
+                                            tabPanel(title = "Tests",
+                                                     
+                                                     # t-tests and results
+                                            ),
+                                            
+                                            tabPanel(title = "Conclusions",
+                                                     
+                                                     # explanation of results
+                                            )
+                                )
                             )
+                            
                         )
                         
                  )
-                 
-                 
                  
              )
              
     ),
     
-    tabPanel("Machine Learning",
+    tabPanel("Machine Learning", value = "machineLearning",
+             
+             h4("Goal: Predict the distance from and the time until the next incident"),
+             
+             br(),
              
              sidebarLayout(
                  
@@ -151,19 +171,35 @@ shinyServer(navbarPage(
                                              "Linear Regression",
                                              "Logistic Regression",
                                              "Random Forest"),
-                                 selected = NULL, multiple = FALSE)
+                                 selected = NULL, multiple = FALSE),
+                     
+                     uiOutput("ml_ui_districtList"),
+                     
+                     uiOutput("ml_ui_dayOfweekList")
                      
                      
                  ),
                  
                  mainPanel(
                      
+                     tabsetPanel(
+                         
+                         tabPanel("Results",
+                                  
+                                  ),
+                         
+                         tabPanel("Model Validation",
+                             
+                             
+                         )
+                     )
+                     
                  )
              )
              
     ),
     
-    tabPanel("Optimization",
+    tabPanel("Optimization", value = "optimize",
              
              mainPanel(
                  
@@ -275,19 +311,10 @@ shinyServer(navbarPage(
              fluidRow(
                  
                  column(width = 6,
-                        h4("Due to inconsistencies in the data from the above data source.
-                           The data used in this project was filtered to incidents in October of 2019. 
-                           This accounts for 66% percent of all incident reports from this source."))
+                        h4("Due to inconsistencies in the data from the above source a sample of the data was taken in 
+                            an attempt to more accurately mirror a real life scenario. 
+                            The data used in this project was filtered to incidents during the week of 2019-09-29 to 2019-10-05. 
+                            This accounts for ~60% percent of the data from this source."))
              ),
-                 
-             br(),
-             
-             fluidRow(
-                 
-                 column(width = 4,
-                        plotlyOutput("aboutChart",
-                                     width = "auto", height = "auto"))
-             )
- 
     )
 ))

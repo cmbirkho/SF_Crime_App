@@ -105,3 +105,43 @@ output$ui_dayofweekList <- renderUI({
                 choices = c("All", dayofweekList()),
                 selected = NULL, multiple = FALSE)
 })
+
+
+
+# ABOUT tab plot
+# pull the data 
+dbPath <- "./sf_crime_db.sqlite"
+db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+
+aboutData <- dbGetQuery(db,   "SELECT 
+                                            100 * SUM(incident_cnt) / (SELECT COUNT(*) FROM incident_reports) AS pct,
+                                            incident_month,
+                                            incident_year
+                                        FROM incident_reports
+                                        GROUP BY 
+                                            incident_month,
+                                            incident_year;")
+
+dbDisconnect(db)
+setDT(aboutData)
+
+aboutData <- dcast(aboutData, incident_month ~ incident_year,
+                   value.var = "pct")
+
+output$aboutChart <- renderPlotly({
+    
+    plot_ly(x = aboutData$incident_month,
+            y = aboutData$`2018`,
+            type = 'bar',
+            name = "2018",
+            color = I('#004c6d')) %>%
+        add_trace(y = aboutData$`2019`, 
+                  name = "2019",
+                  color = I('#c1ffff')) %>%
+        layout(title = "Percent of Incidents by Month & Year",
+               yaxis = list(ticksuffix = "%"),
+               margin = list(t = 90,
+                             size = 8),
+               paper_bgcolor = 'transparent',
+               plot_bgcolor = 'transparent',
+               font = list(color = '#ffffff'))

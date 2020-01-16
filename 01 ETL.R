@@ -8,7 +8,6 @@ library(DBI)
 library(data.table)
 library(tidyverse)
 library(lubridate)
-library(zipcode)
 
 #===============================================================================
 # EXTRACT
@@ -40,7 +39,10 @@ sfCrime <- sfCrime[,
          incident_date = as.character(incident_date),
          report_date = as.character(report_date),
          incident_datetime = as.POSIXct(incident_datetime, format = "%Y-%m-%d %H:%M"),
-         report_datetime = as.POSIXct(report_datetime, format = "%Y-%m-%d %H:%M"))] %>% 
+         report_datetime = as.POSIXct(report_datetime, format = "%Y-%m-%d %H:%M"))] %>%
+  # date filter (one week of data, contains the most incident reports)
+  .[incident_date >= '2019-09-29' & incident_date <= '2019-10-05', ] %>%
+  # convert to character for sqlite
   .[,
     `:=`(incident_datetime = as.character(incident_datetime),
          report_datetime = as.character(report_datetime))]
@@ -143,28 +145,28 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 # Set up incident_reports table
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
-dbExecute(db, "CREATE TABLE incident_reports
-                (incident_id_nbr_cd TEXT NOT NULL,
-                incident_date TEXT NOT NULL,
-                incident_datetime TEXT,
-                incident_day_of_week TEXT,
-                incident_year TEXT,
-                incident_month TEXT,
-                report_date TEXT,
-                report_datetime TEXT,
-                police_district TEXT,
-                analysis_neighborhood TEXT,
-                latitude REAL,
-                longitude REAL,
-                report_type_description TEXT,
-                incident_category TEXT,
-                incident_subcategory TEXT,
-                incident_description TEXT,
-                incident_value TEXT,
-                vehicle_flag INTEGER,
-                weapon_flag INTEGER,
-                incident_cnt INTEGER,
-                UNIQUE (incident_id_nbr_cd, incident_date));")
+# dbExecute(db, "CREATE TABLE incident_reports
+#                 (incident_id_nbr_cd TEXT NOT NULL,
+#                 incident_date TEXT NOT NULL,
+#                 incident_datetime TEXT,
+#                 incident_day_of_week TEXT,
+#                 incident_year TEXT,
+#                 incident_month TEXT,
+#                 report_date TEXT,
+#                 report_datetime TEXT,
+#                 police_district TEXT,
+#                 analysis_neighborhood TEXT,
+#                 latitude REAL,
+#                 longitude REAL,
+#                 report_type_description TEXT,
+#                 incident_category TEXT,
+#                 incident_subcategory TEXT,
+#                 incident_description TEXT,
+#                 incident_value TEXT,
+#                 vehicle_flag INTEGER,
+#                 weapon_flag INTEGER,
+#                 incident_cnt INTEGER,
+#                 UNIQUE (incident_id_nbr_cd, incident_date));")
 #-------------------------------------------------------------------------------
 
 load_data <- function(df) {
