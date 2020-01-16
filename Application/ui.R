@@ -67,11 +67,6 @@ shinyServer(navbarPage(
                                  
                                  tabPanel(title = "Interactive Map", value = 'interactiveMap',
                                           
-                                          fluidRow(
-                                              column(offset = 1, width = 11,  valueBoxOutput("mapDistanceMet"))
-                                              
-                                          ),
-                                          
                                           leafletOutput("overviewMap", height = 1000, width = 1500),
                                           
                                           absolutePanel(id = 'controls', class = "panel panel-default",
@@ -96,8 +91,6 @@ shinyServer(navbarPage(
                column(width = 12, 
                       h4("Hypothesis: Does the day of the week significantly impact the time between incidents?"),
                       br(),
-                      h5("From the officer's perspective the time between incidents is relative to the geographic region they
-                          are stationed in. Taken this perspective into consideration we will analyze the following hypothesis by police district."),
                       h5("HO: The mean under Friday and Saturday is less than or equal to the mean under Sunday-Thursday"),
                       h5("HA: The mean under Friday and Saturday is greater than the mean under Sunday-Thursday"))
              ),
@@ -106,49 +99,63 @@ shinyServer(navbarPage(
                  
                  column(width = 12,
                         
-                        sidebarLayout(
+                        mainPanel(
                             
-                            sidebarPanel(width = 2,
-                                
-                                         uiOutput("ui_isDistrictList")
-                                
-                            ),
-                            
-                            
-                            mainPanel(
-                                
-                                tabsetPanel(id = 'inferenceTabs',
-                                            
-                                            tabPanel(title = "Distributions",
+                            tabsetPanel(id = 'inferenceTabs',
+                                        
+                                        tabPanel(title = "Distributions",
+                                                 
+                                                 fluidRow(
                                                      
-                                                     fluidRow(
-                                                         
-                                                         column(width = 6,
-                                                                plotlyOutput("isHistogram",
-                                                                             width = 'auto', height = '400px')),
-                                                         br(),
-                                                         
-                                                         column(width = 6,
-                                                                plotlyOutput("isBoxPlot",
-                                                                             width = 'auto', height = '400px'))
-                                                         
-                                                     )
-                                            ),
-                                            
-                                            tabPanel(title = "Tests",
+                                                     h5("Conclusions: ")
                                                      
-                                                     # t-tests and results
-                                            ),
-                                            
-                                            tabPanel(title = "Conclusions",
+                                                 ),
+                                                 
+                                                 br(),
+                                                 
+                                                 fluidRow(
                                                      
-                                                     # explanation of results
-                                            )
-                                )
+                                                     h5("Raw data: "),
+                                                     
+                                                     column(width = 6,
+                                                            plotlyOutput("isHistogram",
+                                                                         width = 'auto', height = '400px')),
+                                                     br(),
+                                                     
+                                                     column(width = 6,
+                                                            plotlyOutput("isBoxPlot",
+                                                                         width = 'auto', height = '400px'))
+                                                     
+                                                 ),
+                                                 
+                                                 fluidRow(
+                                                     
+                                                     h5("Normalized data: "),
+                                                     
+                                                     column(width = 6,
+                                                            plotlyOutput("isHistogramNormalized",
+                                                                         width = 'auto', height = '400px')),
+                                                     
+                                                     br(),
+                                                     
+                                                     column(width = 6,
+                                                            plotlyOutput("isBoxPlotNormalized",
+                                                                         width = 'auto', height = '400px'))
+                                                 )
+                                        ),
+                                        
+                                        tabPanel(title = "Tests",
+                                                 
+                                                 # t-tests and results
+                                        ),
+                                        
+                                        tabPanel(title = "Conclusions",
+                                                 
+                                                 # explanation of results
+                                        )
                             )
-                            
                         )
-                        
+
                  )
                  
              )
@@ -311,7 +318,7 @@ shinyServer(navbarPage(
              fluidRow(
                  
                  column(width = 6,
-                        h4("Due to inconsistencies in the data from the above source a sample of the data was taken in 
+                        h4("Due to inconsistencies in the data a sample of the data was taken in 
                             an attempt to more accurately mirror a real life scenario. 
                             The data used in this project was filtered to incidents during the week of 2019-09-29 to 2019-10-05. 
                             This accounts for ~60% percent of the data from this source."))

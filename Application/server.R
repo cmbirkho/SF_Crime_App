@@ -267,12 +267,13 @@ shinyServer(function(input, output, session){
                 
                 countIncid <- pctData()[, .(cnt = sum(incident_cnt)),
                                         by = incident_category]
-                
+                # there's a bug somewhere in this chart, not reacting properly when inputs change
                 countIncid$incident_category <- factor(countIncid$incident_category, 
                                                   levels = unique(countIncid$incident_category)[order(countIncid$cnt, 
                                                                                                  decreasing = FALSE)])
                 countIncid <- countIncid[order(-rank(cnt)),]
-                countIncid <- countIncid[1:10,]
+                countIncid <- countIncid[1:10, ]
+        
                 
                 plot_ly(x = countIncid$cnt,
                         y = countIncid$incident_category,
@@ -328,9 +329,9 @@ shinyServer(function(input, output, session){
                                         "incident_datetime")]
                 
                 timeBw <- timeBw[order(rank(incident_datetime)),]
-                timeBw$nxt_incident <- lead(timeBw$incident_datetime, n = 1)
+                timeBw$nxt_incident_datetime <- lead(timeBw$incident_datetime, n = 1)
                 timeBw <- na.omit(timeBw)
-                timeBw$time_bw_nxt_incident <- difftime(timeBw$nxt_incident, timeBw$incident_datetime,
+                timeBw$time_bw_nxt_incident <- difftime(timeBw$nxt_incident_datetime, timeBw$incident_datetime,
                                                         units = "mins")
                 timeBw$time_bw_nxt_incident <- as.numeric(timeBw$time_bw_nxt_incident)
                 timeBw <- round(mean(timeBw$time_bw_nxt_incident),0) # using median to exclude outliers
@@ -379,44 +380,6 @@ shinyServer(function(input, output, session){
                 sfCrimeFilt
             })
             
-            # distance to next incident
-            output$mapDistanceMet <- renderValueBox({
-                
-                distBw <- sfCrimeFilt()[, c("incident_id_nbr_cd",
-                                            "incident_datetime",
-                                            "latitude",
-                                            "longitude")]
-                
-                distBw <- distBw[order(rank(incident_datetime)),]
-                distBw$nxt_lat <- lead(distBw$latitude, n = 1)
-                distBw$nxt_lon <- lead(distBw$longitude, n = 1)
-                
-                distBw <- na.omit(distBw)
-                
-                dist.Meters <- function(data){
-                    
-                    for(i in 1:nrow(data)){
-                        data$distance_meters[i] <- distm(c(distBw$longitude[i], distBw$latitude[i]),
-                                                         c(distBw$nxt_lon[i], distBw$nxt_lat[i]),
-                                                         fun = distHaversine)
-                    }
-                    
-                    return(data)
-                }
-                
-                distBw <- dist.Meters(data = distBw)
-                
-                distBw <- round(mean(distBw$distance_meters) / 1609.34, 2)
-                
-                distBw <- paste(distBw, "mi", sep = " ")
-                
-                valueBox(
-                    tags$p(distBw, style = "font-size: 90%; color: #EBC944"),
-                    paste('Avg Distance Between Incidents'),
-                    width = NULL)
-                
-            })
-            
             # create overviewMap
             output$overviewMap <- renderLeaflet({
                 
@@ -450,31 +413,7 @@ shinyServer(function(input, output, session){
     # observe event for INFERENTIAL STATS tab
     observeEvent(input$navbarPages == "inferentialStats", {
         
-        # create districtList for select inputs
-        isDistrictList <- reactive({
-            
-            dbPath <- "./sf_crime_db.sqlite"
-            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
-            
-            isDistrictList <- dbGetQuery(db,  "SELECT
-                                                distinct(police_district)
-                                            FROM ml_data_incidents
-                                            ORDER BY police_district;")
-            
-            dbDisconnect(db)
-            
-            isDistrictList <- isDistrictList$police_district
-            isDistrictList
-        })
-        
-        # ui output for districtList
-        output$ui_isDistrictList <- renderUI({
-            selectInput("is_pick_district",
-                        label = "Police District:",
-                        choices = c(isDistrictList()),
-                        selected = NULL, multiple = FALSE)
-        })
-        
+       
         # pull the data used for this tab
         isData <- reactive({
             
@@ -488,50 +427,113 @@ shinyServer(function(input, output, session){
             
             setDT(isData)
             
-            isData <- isData[police_district %in% input$is_pick_district,]
-            
             isData
             
         })
         
-        # histogram
+        # histogram with outliers
         output$isHistogram <- renderPlotly({
             
-            plot_ly(isData(),
-                    alpha = 0.7,
-                    x = ~ min_to_nxt_incident,
-                    type = "histogram",
-                    color = I('#1287A8')) %>% 
-            layout(title = "Distribution of Minutes Between Incidents",
-                   xaxis = list(title = "Minutes"),
-                   yaxis = list(title = "Frequency"),
-                   margin = list(t = 135,
-                                 size = 14),
-                   paper_bgcolor = 'transparent',
-                   plot_bgcolor = 'transparent',
-                   font = list(color = '#ffffff'))
+            g1 <- ggplot(isData(),
+                         aes(x = min_to_nxt_incident)) +
+                geom_histogram(aes(fill = ..count..)) +
+                theme(
+                    # panel.background = element_rect(fill = "transparent"), 
+                    plot.background = element_rect(fill = "transparent", color = NA),
+                    panel.grid.major = element_blank(), 
+                    panel.grid.minor = element_blank(), 
+                    legend.background = element_rect(fill = "transparent"), 
+                    legend.box.background = element_rect(fill = "transparent"),
+                    title = element_text(colour = "#ffffff"),
+                    axis.text = element_text(colour = '#ffffff'),
+                    legend.text = element_text(colour = '#ffffff')) +
+                labs(x = 'Minutes', y = 'Frequency', fill = 'Count') +
+                ggtitle("Sample Distribution | Minutes Between Incidents")
+            
+            ggplotly(g1)
             
         })
         
-        # boxplot
+        # boxplot with outliers
         output$isBoxPlot <- renderPlotly({
             
-            plot_ly(isData(),
-                    y = ~ min_to_nxt_incident,
-                    color = ~ incident_day_of_week,
-                    type = "box") %>% 
-                layout(title = "Minutes Between Incidents by Day of Week",
-                       showlegend = FALSE,
-                       xaxis = list(title = " "),
-                       yaxis = list(title = "Minutes"),
-                       margin = list(t = 90,
-                                     size = 14),
-                       paper_bgcolor = 'transparent',
-                       plot_bgcolor = 'transparent',
-                       font = list(color = '#ffffff'))
+            g2 <- ggplot(isData(),
+                         aes(as.factor(incident_day_of_week), min_to_nxt_incident,
+                             fill = as.factor(incident_day_of_week))) +
+                theme(
+                    # panel.background = element_rect(fill = "transparent"), 
+                    plot.background = element_rect(fill = "transparent", color = NA), 
+                    panel.grid.major = element_blank(), 
+                    panel.grid.minor = element_blank(), 
+                    legend.background = element_rect(fill = "transparent"), 
+                    legend.box.background = element_rect(fill = "transparent"),
+                    title = element_text(colour = "#ffffff"),
+                    axis.text = element_text(colour = '#ffffff'),
+                    legend.text = element_text(colour = '#ffffff')) +
+                labs(y = "Minutes", x = 'Day of Week', fill = ' ') +
+                ggtitle("Minutes Between Incidents by Day of Week")
+              
+            
+            ggplotly(g2)
             
         })
         
+        # histogram outliers removed
+        output$isHistogramNormalized <- renderPlotly({
+            
+            mu <- mean(isData()$min_to_nxt_incident)
+            sdv <- sd(isData()$min_to_nxt_incident)
+            
+            isDataSub <- isData()[, min_to_nxt_incident := (min_to_nxt_incident - mu) / sdv]
+            
+            g3 <- ggplot(isDataSub,
+                         aes(x = min_to_nxt_incident)) +
+                geom_histogram(aes(fill = ..count..)) +
+                theme(
+                    # panel.background = element_rect(fill = "transparent"), 
+                    plot.background = element_rect(fill = "transparent", color = NA),
+                    panel.grid.major = element_blank(), 
+                    panel.grid.minor = element_blank(), 
+                    legend.background = element_rect(fill = "transparent"), 
+                    legend.box.background = element_rect(fill = "transparent"),
+                    title = element_text(colour = "#ffffff"),
+                    axis.text = element_text(colour = '#ffffff'),
+                    legend.text = element_text(colour = '#ffffff')) +
+                labs(x = 'Minutes', y = 'Frequency', fill = 'Count') +
+                ggtitle("Sample Distribution | Minutes Between Incidents")
+            
+            ggplotly(g3)
+            
+        })
+        
+        # boxplot with outliers
+        output$isBoxPlotNormalized <- renderPlotly({
+            
+            mu <- mean(isData()$min_to_nxt_incident)
+            sdv <- sd(isData()$min_to_nxt_incident)
+            
+            isDataSub <- isData()[, min_to_nxt_incident := (min_to_nxt_incident - mu) / sdv]
+            
+            g4 <- ggplot(isDataSub,
+                         aes(as.factor(incident_day_of_week), min_to_nxt_incident,
+                             fill = as.factor(incident_day_of_week))) +
+                theme(
+                    # panel.background = element_rect(fill = "transparent"), 
+                    plot.background = element_rect(fill = "transparent", color = NA), 
+                    panel.grid.major = element_blank(), 
+                    panel.grid.minor = element_blank(), 
+                    legend.background = element_rect(fill = "transparent"), 
+                    legend.box.background = element_rect(fill = "transparent"),
+                    title = element_text(colour = "#ffffff"),
+                    axis.text = element_text(colour = '#ffffff'),
+                    legend.text = element_text(colour = '#ffffff')) +
+                labs(y = "Minutes", x = 'Day of Week', fill = ' ') +
+                ggtitle("Minutes Between Incidents by Day of Week")
+            
+            
+            ggplotly(g4)
+            
+        })
         
     })
     

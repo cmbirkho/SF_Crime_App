@@ -39,17 +39,9 @@ sfCrime <- sfCrime[, c("incident_id_nbr_cd",
                        "latitude",
                        "longitude")]
 
-# Make tables by police_district
-richmond <- sfCrime[police_district == "Richmond", ]
-mission <- sfCrime[police_district == "Mission", ]
-central <- sfCrime[police_district == "Central", ]
-park <- sfCrime[police_district == "Park", ]
-taraval <- sfCrime[police_district == "Taraval", ]
-ingleside <- sfCrime[police_district == "Ingleside", ]
-southern <- sfCrime[police_district == "Southern", ]
-tenderloin <- sfCrime[police_district == "Tenderloin", ]
-bayview <- sfCrime[police_district == "Bayview", ]
-northern <- sfCrime[police_district == "Northern", ]
+# put in order by datetime
+sfCrime <- sfCrime[order(rank(incident_datetime)), ]
+
 
 # min_to_nxt_incident by police_district
 time.till <- function(data){
@@ -58,7 +50,7 @@ time.till <- function(data){
     
     data$nxt_incident_datetime <- lead(data$incident_datetime, n = 1)
     
-    data$min_to_nxt_incident <- difftime(data$nxt_incident, data$incident_datetime,
+    data$min_to_nxt_incident <- difftime(data$nxt_incident_datetime, data$incident_datetime,
                                             units = "mins")
     
     data$min_to_nxt_incident <- as.numeric(data$min_to_nxt_incident)
@@ -68,16 +60,7 @@ time.till <- function(data){
     return(data)
 }
 
-richmond <- time.till(data = richmond)
-mission <- time.till(data = mission)
-central <- time.till(data = central)
-park <- time.till(data = park)
-taraval <- time.till(data = taraval)
-ingleside <- time.till(data = ingleside)
-southern <- time.till(data = southern)
-tenderloin <- time.till(data = tenderloin)
-bayview <- time.till(data = bayview)
-northern <- time.till(data = northern)
+sfCrime <- time.till(data = sfCrime)
 
 # miles_to_nxt_incident
 dist.Miles <- function(data){
@@ -99,36 +82,18 @@ dist.Miles <- function(data){
     return(data)
 }
 
-richmond <- dist.Miles(data = richmond)
-mission <- dist.Miles(data = mission)
-central <- dist.Miles(data = central)
-park <- dist.Miles(data = park)
-taraval <- dist.Miles(data = taraval)
-ingleside <- dist.Miles(data = ingleside)
-southern <- dist.Miles(data = southern)
-tenderloin <- dist.Miles(data = tenderloin)
-bayview <- dist.Miles(data = bayview)
-northern <- dist.Miles(data = northern)
+sfCrime <- dist.Miles(data = sfCrime)
 
-# stack tables
-sfCrimeMet <- rbind(richmond, mission, central, park, taraval,
-                    ingleside, southern, tenderloin, bayview, northern)
 
 # remove NA at end of tables caused by lead functions 
-sfCrimeMet <- na.omit(sfCrimeMet)
-
-# trim outliers
-maxMin <- quantile(sfCrimeMet$min_to_nxt_incident, 0.80)
-minMin <- quantile(sfCrimeMet$min_to_nxt_incident, 0.10)
-sfCrimeMet <- sfCrimeMet[min_to_nxt_incident < maxMin &
-                             min_to_nxt_incident > minMin]
+sfCrime <- na.omit(sfCrime)
 
 # format columns for sqlite
-sfCrimeMet <- sfCrimeMet[, incident_datetime := as.character(incident_datetime)]
+sfCrime <- sfCrime[, incident_datetime := as.character(incident_datetime)]
 
-sfCrimeMet <- sfCrimeMet[, - c("latitude",
-                               "longitude",
-                               "incident_datetime")]
+sfCrime <- sfCrime[, - c("latitude",
+                         "longitude",
+                         "incident_datetime")]
 
 
 #===============================================================================
@@ -169,5 +134,5 @@ load_data <- function(df) {
     print("=====Data upload complete=====")
 }
 
-load_data(df = sfCrimeMet)
+load_data(df = sfCrime)
 
