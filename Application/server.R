@@ -431,10 +431,10 @@ shinyServer(function(input, output, session){
             
         })
         
-        # histogram with outliers
+        # histogram and boxplot with outliers
         output$isHistogram <- renderPlotly({
             
-            g1 <- ggplot(isData(),
+            p1 <- ggplot(isData(),
                          aes(x = min_to_nxt_incident)) +
                 geom_histogram(aes(fill = ..count..)) +
                 theme(
@@ -450,41 +450,41 @@ shinyServer(function(input, output, session){
                 labs(x = 'Minutes', y = 'Frequency', fill = 'Count') +
                 ggtitle("Sample Distribution | Minutes Between Incidents")
             
-            ggplotly(g1)
-            
+           ggplotly(p1)
         })
         
         # boxplot with outliers
         output$isBoxPlot <- renderPlotly({
             
-            g2 <- ggplot(isData(),
+            p2 <- ggplot(isData(),
                          aes(as.factor(incident_day_of_week), min_to_nxt_incident,
                              fill = as.factor(incident_day_of_week))) +
                 theme(
-                    # panel.background = element_rect(fill = "transparent"), 
-                    plot.background = element_rect(fill = "transparent", color = NA), 
-                    panel.grid.major = element_blank(), 
-                    panel.grid.minor = element_blank(), 
-                    legend.background = element_rect(fill = "transparent"), 
+                    # panel.background = element_rect(fill = "transparent"),
+                    plot.background = element_rect(fill = "transparent", color = NA),
+                    panel.grid.major = element_blank(),
+                    panel.grid.minor = element_blank(),
+                    legend.background = element_rect(fill = "transparent"),
                     legend.box.background = element_rect(fill = "transparent"),
                     title = element_text(colour = "#ffffff"),
                     axis.text = element_text(colour = '#ffffff'),
                     legend.text = element_text(colour = '#ffffff')) +
                 labs(y = "Minutes", x = 'Day of Week', fill = ' ') +
                 ggtitle("Minutes Between Incidents by Day of Week")
-              
             
-            ggplotly(g2)
-            
+            ggplotly(p2)
         })
         
-        # histogram outliers removed
+
+        
+        
+        # histogram 
         output$isHistogramNormalized <- renderPlotly({
             
-            mu <- mean(isData()$min_to_nxt_incident)
-            sdv <- sd(isData()$min_to_nxt_incident)
-            
-            isDataSub <- isData()[, min_to_nxt_incident := (min_to_nxt_incident - mu) / sdv]
+            isDataSub <- isData()[, min_to_nxt_incident := log(min_to_nxt_incident + 1)]
+            mu <- mean(isDataSub$min_to_nxt_incident)
+            sdv <- sd(isDataSub$min_to_nxt_incident)
+            isDataSub <- isDataSub[, min_to_nxt_incident := (min_to_nxt_incident - mu) / sdv]
             
             g3 <- ggplot(isDataSub,
                          aes(x = min_to_nxt_incident)) +
@@ -506,13 +506,10 @@ shinyServer(function(input, output, session){
             
         })
         
-        # boxplot with outliers
+        # boxplot 
         output$isBoxPlotNormalized <- renderPlotly({
-            
-            mu <- mean(isData()$min_to_nxt_incident)
-            sdv <- sd(isData()$min_to_nxt_incident)
-            
-            isDataSub <- isData()[, min_to_nxt_incident := (min_to_nxt_incident - mu) / sdv]
+    
+            isDataSub <- isData()[, min_to_nxt_incident := log(min_to_nxt_incident + 1)]
             
             g4 <- ggplot(isDataSub,
                          aes(as.factor(incident_day_of_week), min_to_nxt_incident,

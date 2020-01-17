@@ -124,8 +124,7 @@ shinyServer(navbarPage(
                                                      
                                                      column(width = 6,
                                                             plotlyOutput("isBoxPlot",
-                                                                         width = 'auto', height = '400px'))
-                                                     
+                                                                       width = 'auto', height = '400px'))
                                                  ),
                                                  
                                                  fluidRow(
