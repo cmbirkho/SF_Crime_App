@@ -145,3 +145,79 @@ output$aboutChart <- renderPlotly({
                paper_bgcolor = 'transparent',
                plot_bgcolor = 'transparent',
                font = list(color = '#ffffff'))
+    
+    
+    
+    # histogram - sample distribution, trimmed outliers
+    output$isHistogramCut <- renderPlotly({
+        
+        sd <- isData()$miles_to_nxt_incident
+        mu <- isData()$miles_to_nxt_incident
+        cutOff <- sd * 3
+        
+        lowBnd <- mu - cutOff
+        upBnd <- mu + cutOff
+        
+        isDataCut <- isData()[miles_to_nxt_incident > lowBnd &
+                                  miles_to_nxt_incident < upBnd,]
+        
+        p3 <- ggplot(isDataCut,
+                     aes(x = miles_to_nxt_incident)) +
+            geom_histogram(aes(fill = ..count..), bins = 30) +
+            geom_vline(aes(xintercept = mean(miles_to_nxt_incident), color = 'mean'),
+                       linetype = 'dashed', size = 1) +
+            geom_vline(aes(xintercept = median(miles_to_nxt_incident), color = 'median'),
+                       linetype = 'dashed', size = 1) + 
+            theme(
+                # panel.background = element_rect(fill = "transparent"), 
+                plot.background = element_rect(fill = "transparent", color = NA),
+                panel.grid.major = element_blank(), 
+                panel.grid.minor = element_blank(), 
+                legend.background = element_rect(fill = "transparent"), 
+                legend.box.background = element_rect(fill = "transparent"),
+                title = element_text(colour = "#ffffff", size = 8),
+                axis.text = element_text(colour = '#ffffff'),
+                legend.text = element_text(colour = '#ffffff')) +
+            scale_color_manual(name = '',
+                               values = c(mean = 'hotpink', median = 'green')) +
+            labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
+            ggtitle("Sample Distribution | Miles Between Incidents")
+        
+        ggplotly(p3)
+        
+    })
+    
+    # boxplot - sample distribution, trimmed outliers
+    output$isBoxPlotCut <- renderPlotly({
+        
+        sdTwo <- isData()$miles_to_nxt_incident
+        muTwo <- isData()$miles_to_nxt_incident
+        cutOffTwo <- sdTwo * 3
+        
+        lowBndTwo <- muTwo - cutOffTwo
+        upBndTwo <- muTwo + cutOffTwo
+        
+        isDataCutBox <- isData()[miles_to_nxt_incident > lowBndTwo &
+                                     miles_to_nxt_incident < upBndTwo,]
+        
+        p3 <- ggplot(isDataCutBox,
+                     aes(as.factor(incident_day_of_week), miles_to_nxt_incident,
+                         fill = as.factor(incident_day_of_week))) +
+            geom_boxplot() +
+            theme(
+                # panel.background = element_rect(fill = "transparent"),
+                plot.background = element_rect(fill = "transparent", color = NA),
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                legend.background = element_rect(fill = "transparent"),
+                legend.box.background = element_rect(fill = "transparent"),
+                title = element_text(colour = "#ffffff", size = 8),
+                axis.text = element_text(colour = '#ffffff'),
+                axis.text.x = element_text(angle = 45, hjust = 0),
+                legend.text = element_text(colour = '#ffffff')) +
+            labs(y = "Miles", x = 'Day of Week', fill = ' ') +
+            ggtitle("Miles Between Incidents by Day of Week")
+        
+        ggplotly(p3)
+        
+    })

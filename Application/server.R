@@ -9,6 +9,7 @@ library(geosphere)
 library(RSQLite)
 library(DBI)
 library(gridExtra)
+library(cowplot)
 library(leaflet)
 library(plotly)
 
@@ -267,13 +268,13 @@ shinyServer(function(input, output, session){
                 
                 countIncid <- pctData()[, .(cnt = sum(incident_cnt)),
                                         by = incident_category]
-                # there's a bug somewhere in this chart, not reacting properly when inputs change
-                countIncid$incident_category <- factor(countIncid$incident_category, 
-                                                  levels = unique(countIncid$incident_category)[order(countIncid$cnt, 
-                                                                                                 decreasing = FALSE)])
+                
                 countIncid <- countIncid[order(-rank(cnt)),]
                 countIncid <- countIncid[1:10, ]
         
+                countIncid$incident_category <- factor(countIncid$incident_category, 
+                                                       levels = unique(countIncid$incident_category)[order(countIncid$cnt, 
+                                                                                                           decreasing = FALSE)])
                 
                 plot_ly(x = countIncid$cnt,
                         y = countIncid$incident_category,
@@ -421,7 +422,8 @@ shinyServer(function(input, output, session){
             db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
             
             isData <- dbGetQuery(db,  "SELECT *
-                                            FROM ml_data_incidents;")
+                                        FROM ml_data_incidents
+                                        WHERE incident_day_of_week IN ('Friday', 'Wednesday');")
             
             dbDisconnect(db)
             
@@ -431,34 +433,40 @@ shinyServer(function(input, output, session){
             
         })
         
-        # histogram and boxplot with outliers
-        output$isHistogram <- renderPlotly({
+        # t-test values
+        tTestValue <- reactive({
             
-            p1 <- ggplot(isData(),
-                         aes(x = min_to_nxt_incident)) +
-                geom_histogram(aes(fill = ..count..)) +
-                theme(
-                    # panel.background = element_rect(fill = "transparent"), 
-                    plot.background = element_rect(fill = "transparent", color = NA),
-                    panel.grid.major = element_blank(), 
-                    panel.grid.minor = element_blank(), 
-                    legend.background = element_rect(fill = "transparent"), 
-                    legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff"),
-                    axis.text = element_text(colour = '#ffffff'),
-                    legend.text = element_text(colour = '#ffffff')) +
-                labs(x = 'Minutes', y = 'Frequency', fill = 'Count') +
-                ggtitle("Sample Distribution | Minutes Between Incidents")
+            tTestValue <- isData()[, incident_day_of_week := as.factor(incident_day_of_week)]
             
-           ggplotly(p1)
+            tTestValue <- t.test(miles_to_nxt_incident ~ incident_day_of_week, 
+                                 tTestValue, paired = FALSE)
+            
+            tTestValue
         })
         
-        # boxplot with outliers
+        # text output for sample for Friday
+        output$isTextSampFriday <- renderText({
+            
+            nbrRowFri <- nrow(isData()[incident_day_of_week == 'Friday',])
+            
+            paste("The sample size for Friday is ", nbrRowFri, ".")
+        })
+        
+        # text output for sample for Sunday
+        output$isTextSampWednesday <- renderText({
+            
+            nbrRowWed <- nrow(isData()[incident_day_of_week == 'Wednesday',])
+            
+            paste("The sample size for Wednesday is ", nbrRowWed, ".")
+        })
+    
+        # boxplot - sample distribution
         output$isBoxPlot <- renderPlotly({
             
             p2 <- ggplot(isData(),
-                         aes(as.factor(incident_day_of_week), min_to_nxt_incident,
+                         aes(as.factor(incident_day_of_week), miles_to_nxt_incident,
                              fill = as.factor(incident_day_of_week))) +
+                geom_boxplot() +
                 theme(
                     # panel.background = element_rect(fill = "transparent"),
                     plot.background = element_rect(fill = "transparent", color = NA),
@@ -466,29 +474,28 @@ shinyServer(function(input, output, session){
                     panel.grid.minor = element_blank(),
                     legend.background = element_rect(fill = "transparent"),
                     legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff"),
+                    title = element_text(colour = "#ffffff", size = 8),
                     axis.text = element_text(colour = '#ffffff'),
+                    axis.text.x = element_text(angle = 0, hjust = 0),
                     legend.text = element_text(colour = '#ffffff')) +
-                labs(y = "Minutes", x = 'Day of Week', fill = ' ') +
-                ggtitle("Minutes Between Incidents by Day of Week")
-            
+                labs(y = "Miles", x = 'Day of Week', fill = ' ') +
+                ggtitle("Sample Distribution | Miles Between Incidents")
+
             ggplotly(p2)
         })
         
-
-        
-        
-        # histogram 
-        output$isHistogramNormalized <- renderPlotly({
+        # histogram - sample distribution
+        output$isHistogram <- renderPlotly({
             
-            isDataSub <- isData()[, min_to_nxt_incident := log(min_to_nxt_incident + 1)]
-            mu <- mean(isDataSub$min_to_nxt_incident)
-            sdv <- sd(isDataSub$min_to_nxt_incident)
-            isDataSub <- isDataSub[, min_to_nxt_incident := (min_to_nxt_incident - mu) / sdv]
-            
-            g3 <- ggplot(isDataSub,
-                         aes(x = min_to_nxt_incident)) +
-                geom_histogram(aes(fill = ..count..)) +
+            p1 <- ggplot(isData(),
+                         aes(x = miles_to_nxt_incident)) +
+                geom_histogram(aes(fill = ..count..), bins = 30) +
+                geom_vline(aes(xintercept = mean(miles_to_nxt_incident), 
+                               color = 'mean'),
+                           linetype = 'dashed', size = 1) +
+                geom_vline(aes(xintercept = median(miles_to_nxt_incident), 
+                               color = 'median'),
+                           linetype = 'dashed', size = 1) + 
                 theme(
                     # panel.background = element_rect(fill = "transparent"), 
                     plot.background = element_rect(fill = "transparent", color = NA),
@@ -496,41 +503,120 @@ shinyServer(function(input, output, session){
                     panel.grid.minor = element_blank(), 
                     legend.background = element_rect(fill = "transparent"), 
                     legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff"),
+                    title = element_text(colour = "#ffffff", size = 8),
                     axis.text = element_text(colour = '#ffffff'),
                     legend.text = element_text(colour = '#ffffff')) +
+                scale_color_manual(name = '',
+                                   values = c(mean = 'hotpink', median = 'green')) +
                 labs(x = 'Minutes', y = 'Frequency', fill = 'Count') +
-                ggtitle("Sample Distribution | Minutes Between Incidents")
+                ggtitle("Sample Distribution | Miles Between Incidents")
             
-            ggplotly(g3)
+            ggplotly(p1)
             
         })
         
-        # boxplot 
-        output$isBoxPlotNormalized <- renderPlotly({
-    
-            isDataSub <- isData()[, min_to_nxt_incident := log(min_to_nxt_incident + 1)]
+        output$shapiroTest <- renderText({
             
-            g4 <- ggplot(isDataSub,
-                         aes(as.factor(incident_day_of_week), min_to_nxt_incident,
-                             fill = as.factor(incident_day_of_week))) +
+            sTest <- shapiro.test(isData()$miles_to_nxt_incident)
+            paste("Shapiro Wilk's test: p-value = ", sTest$p.value, ".  Since the p-value is less 
+                  than 0.05 it implies our variable is not normally distributed.")
+        })
+        
+        
+        # histogram - sampling distribution 
+        output$isHistogramSampling <- renderPlotly({
+            
+            x <- isData()$miles_to_nxt_incident
+            nbrSamples <- 1000
+            sampleMeans <- rep(NA, nbrSamples)
+            
+            for (i in 1:nbrSamples) {
+                sample <- sample(x, size = 10, replace = TRUE)
+                sampleMeans[i] <- mean(sample)
+            }
+            
+            sampleMeans <- as.data.frame(sampleMeans)
+            names(sampleMeans) <- "mu"
+            
+            p3 <- ggplot(sampleMeans,
+                         aes(x = mu)) +
+                geom_histogram(aes(fill = ..count..), bins = 30) +
+                geom_vline(aes(xintercept = mean(mu), color = 'mean'),
+                           linetype = 'dashed', size = 1) +
+                geom_vline(aes(xintercept = median(mu), color = 'median'),
+                           linetype = 'dashed', size = 1) + 
                 theme(
                     # panel.background = element_rect(fill = "transparent"), 
-                    plot.background = element_rect(fill = "transparent", color = NA), 
+                    plot.background = element_rect(fill = "transparent", color = NA),
                     panel.grid.major = element_blank(), 
                     panel.grid.minor = element_blank(), 
                     legend.background = element_rect(fill = "transparent"), 
                     legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff"),
+                    title = element_text(colour = "#ffffff", size = 8),
                     axis.text = element_text(colour = '#ffffff'),
                     legend.text = element_text(colour = '#ffffff')) +
-                labs(y = "Minutes", x = 'Day of Week', fill = ' ') +
-                ggtitle("Minutes Between Incidents by Day of Week")
+                scale_color_manual(name = '',
+                                   values = c(mean = 'hotpink', median = 'green')) +
+                labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
+                ggtitle("Sampling Distribution | Miles Between Incidents")
             
-            
-            ggplotly(g4)
+            ggplotly(p3)
             
         })
+        
+        # t-test metrics
+        output$isTpvalue <- renderValueBox({
+            
+            valueBox(
+                tags$p(round(tTestValue()$p.value, 2), style = "font-size: 85%; color: #EBC944"),
+                paste('p-value'),
+                width = NULL)
+        })
+        
+        output$isTmuFriday <- renderValueBox({
+            
+            valueBox(
+                tags$p(round(tTestValue()$estimate[1], 2), style = "font-size: 85%; color: #EBC944"),
+                paste('Mean Under Friday'),
+                width = NULL)
+        })
+        
+        output$isTmuSunday <- renderValueBox({
+            
+            
+            valueBox(
+                tags$p(round(tTestValue()$estimate[2], 2), style = "font-size: 85%; color: #EBC944"),
+                paste('Mean Under Wednesday'),
+                width = NULL)
+        })
+        
+        output$isTlwBnd <- renderValueBox({
+            
+            
+            valueBox(
+                tags$p(round(tTestValue()$conf.int[1], 2), style = "font-size: 85%; color: #EBC944"),
+                paste('95% CI Lower Bound'),
+                width = NULL)
+        })
+        
+        output$isTupBnd <- renderValueBox({
+            
+            
+            valueBox(
+                tags$p(round(tTestValue()$conf.int[2], 2), style = "font-size: 85%; color: #EBC944"),
+                paste('95% CI Upper Bound'),
+                width = NULL)
+        })
+        
+        output$isTdf <- renderValueBox({
+            
+            
+            valueBox(
+                tags$p(round(tTestValue()$statistic, 2), style = "font-size: 85%; color: #EBC944"),
+                paste('t-value'),
+                width = NULL)
+        })
+        
         
     })
     
