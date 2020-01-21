@@ -508,7 +508,7 @@ shinyServer(function(input, output, session){
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Minutes', y = 'Frequency', fill = 'Count') +
+                labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
                 ggtitle("Sample Distribution | Miles Between Incidents")
             
             ggplotly(p1)

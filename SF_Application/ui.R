@@ -256,9 +256,9 @@ shinyServer(navbarPage(
                      
                      tabPanel("Problem Definition",
                               
-                              h3("How do we minimize the number of officers needed on duty without sacrificing public safety?"),
+                              h5("How do we minimize the number of officers needed on duty without sacrificing public safety?"),
                               br(),
-                              h3("Assumptions:")
+                              h5("Assumptions:")
                               
                      ),
                      
@@ -272,13 +272,13 @@ shinyServer(navbarPage(
                                   
                                   sidebarPanel(
                                       
-                                      h4("Model Inputs")
+                                      h5("Model Inputs")
                                       
                                   ),
                                   
                                   mainPanel(
                                       
-                                      h4("test")
+                                      h5("test")
                                       
                                   )
                               )
