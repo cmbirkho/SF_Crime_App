@@ -90,16 +90,19 @@ shinyServer(navbarPage(
                  
                  column(width = 8, 
                         h3("Does the frequency of incidents impact the distance between them?"),
-                        h5("Hypothesis: The more incidents there are the shorter the distance between incidents."),
-                        h5("~35% of incidents occur on Friday and ~10% of incidents occur on Wednesday."),
+                        br(),
+                        h4("Hypothesis: The more incidents there are the shorter the distance between them."),
                         h5("HO: The mean distance under Friday is greater than or equal to the mean under Wednesday."),
                         h5("HA: The mean distance under Friday is less than the mean under Wednesday."),
                         br(),
-                        textOutput("isTextSampFriday"),
-                        textOutput("isTextSampWednesday"),
-                        h5("To calculate the distance between incidents we order them by when they occured using date and time. 
-                         We then use the Haversine distance formula to measure the distance from
-                         the first incident to the second, the second to the third, the third to the fourth and so on.")
+                        tags$div(tags$ul(
+                            tags$li(tags$span("~35% of incidents occur on Friday and ~10% of incidents occur on Wednesday.")),
+                            tags$li(tags$span(textOutput("isTextSampFriday"))),
+                            tags$li(tags$span(textOutput("isTextSampWednesday"))),
+                            tags$li(tags$span("To calculate the distance between incidents we order them by when they occured using date and time. 
+                                                We then use the Haversine distance formula to measure the distance from
+                                                the first incident to the second, the second to the third, the third to the fourth and so on."))
+                        ))
                  )
              ),
              
@@ -119,38 +122,44 @@ shinyServer(navbarPage(
                                                      
                                                      column(width = 6,
                                                             plotlyOutput("isHistogram",
-                                                                         width = 'auto', height = 'auto')),
+                                                                         width = 'auto', height = '600px')),
                                                      
                                                      column(width = 6,
                                                             plotlyOutput("isBoxPlot",
-                                                                         width = 'auto', height = 'auto')),
+                                                                         width = 'auto', height = '600px')),
                                                      
                                                      br(),
                                                      
-                                                     h5("The data appears skewed.")
+                                                     h4("The data appears skewed.")
                                                      
                                                  ),
                                                  
                                                  fluidRow(
                                                      
-                                                     column(width = 12, textOutput("shapiroTest")),
+                                                     tags$div(tags$ul(
+                                                         tags$li(tags$span(textOutput("shapiroTest")))
+                                                     )),
                                                      
-                                                     br(),
+                                                     h4("Is the deviation from normality going to materially impact results?"),
                                                      
-                                                     h5("Is the deviation from normality going to materially impact results?"),
-                                                     
-                                                     h5("It will not because we intend to perform a t-test and although not valid
+                                                     tags$div(tags$ul(
+                                                         tags$li(tags$span("It will not because we intend to perform a t-test and although not valid
                                                          for small sample sizes with non-normal distributions a t-test is valid
-                                                         for large sample sizes with non-normal distributions.")
+                                                         for large sample sizes with non-normal distributions."))
+                                                     ))
+
                                                  ),
                                                  
+                                                 br(),
                                                  br(),
                                                  
                                                  fluidRow(
                                                      
+                                                     h4("Let's take a look at a sampling distribution of the data."),
+                                                     
                                                      column(width = 6,
                                                             plotlyOutput("isHistogramSampling",
-                                                                         width = 'auto', height = 'auto'))
+                                                                         width = 'auto', height = '600px'))
                                                      
                                                  )
                                         ),
@@ -161,24 +170,9 @@ shinyServer(navbarPage(
                                                  
                                                  fluidRow(
                                                      
-                                                     h5("To test our hypothesis we will use an independent samples t-test."),
+                                                     h4("To test our hypothesis we will use an independent samples t-test."),
                                                      br(),
-                                                     h5("Results:"),
-                                                     h5("The mean under Friday is greater than the mean under Wednesday."),
-                                                     h5("The p-value is greater than the significance level of 0.05."),
-                                                     h5("The confidence interval contains zero."),
-                                                     br(),
-                                                     h5("Conclusion:"),
-                                                     h5("Based on these results we can infer that the number of incidents
-                                                         does not have a statistically significant effect on the distance between them. 
-                                                         Thus we fail to reject the null hypothesis."),
-                                                     h5("Applying these findings to real life we can infer that on days when incident counts
-                                                        are high officers will still be traveling the same distance between incidents and thus
-                                                        taking the same time to respond from one incident to the next. This logic would support 
-                                                        the need for having more officers on duty during days with a higher frequency of incidents."),
-                                                     
-                                                     br(),
-                                                     h5("T-Test Metrics: "),
+                                                     h4("T-Test Metrics: "),
                                                      column(width = 4, valueBoxOutput("isTpvalue")),
                                                      column(width = 4, valueBoxOutput("isTmuFriday")),
                                                      column(width = 4, valueBoxOutput("isTmuSunday"))
@@ -191,8 +185,25 @@ shinyServer(navbarPage(
                                                      column(width = 4, valueBoxOutput("isTupBnd")),
                                                      column(width = 4, valueBoxOutput("isTdf"))
                                                      
+                                                 ),
+                                                 
+                                                 br(),
+                                                 
+                                                 fluidRow(
+                                                     h4("Conclusions:"),
+                                                     tags$div(tags$ul(
+                                                         tags$li(tags$span("The mean under Friday is greater than the mean under Wednesday.")),
+                                                         tags$li(tags$span("The p-value is greater than the significance level of 0.05.")),
+                                                         tags$li(tags$span("The confidence interval contains zero.")),
+                                                         tags$li(tags$span("Based on these results we can infer that the number of incidents
+                                                         does not have a statistically significant effect on the distance between them. 
+                                                         Thus we fail to reject the null hypothesis.")),
+                                                         tags$li(tags$span("Applying these findings to real life we can infer that on days when incident counts
+                                                        are high officers will still be traveling the same distance between incidents and thus
+                                                        taking the same time to respond from one incident to the next. This logic would support 
+                                                        the need for having more officers on duty during days with a higher frequency of incidents."))
+                                                     ))
                                                  )
-                                                        
                                         )
                                         
                             )

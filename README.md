@@ -10,9 +10,11 @@
     - Data Download
     - About
 
-
 #### **Where does the data come from?**
 - Police Department Incident Reports: 2018 to Present. For more information go [**here.**](https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783)
+
+### **Where can I find the app?**
+- [**here**](https://cmbirkho.shinyapps.io/sf_application/)
 
 #### **Development Process**
 1. Find a dataset that's interesting!

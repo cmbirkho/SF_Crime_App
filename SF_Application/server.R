@@ -296,7 +296,7 @@ shinyServer(function(input, output, session){
                 totCnt <- sum(pctData()$incident_cnt)
                 
                  valueBox(
-                    tags$p(formatC(totCnt, format="d"), style = "font-size: 90%; color: #EBC944"),
+                    tags$p(formatC(totCnt, format="d"), style = "font-size: 70%; color: #EBC944"),
                     paste('Total incidents'),
                     width = NULL)
                 
@@ -307,7 +307,7 @@ shinyServer(function(input, output, session){
                 avgInc <- sum(pctData()$incident_cnt)/uniqueN(pctData()$incident_date)
                 
                 valueBox(
-                    tags$p(formatC(avgInc, format="f", digits = 1), style = "font-size: 90%; color: #EBC944"),
+                    tags$p(formatC(avgInc, format="f", digits = 1), style = "font-size: 70%; color: #EBC944"),
                     paste('Incidents Per Day'),
                     width = NULL)
             })
@@ -319,7 +319,7 @@ shinyServer(function(input, output, session){
                 crimInc <- paste(round(crimInc * 100, 0), "%")
                 
                 valueBox(
-                    tags$p(crimInc, style = "font-size: 90%; color: #EBC944"),
+                    tags$p(crimInc, style = "font-size: 70%; color: #EBC944"),
                     paste('Criminal Incidents'),
                     width = NULL)
             })
@@ -339,7 +339,7 @@ shinyServer(function(input, output, session){
                 timeBw <- paste(timeBw, "min", sep = " ")
                 
                 valueBox(
-                    tags$p(timeBw, style = "font-size: 90%; color: #EBC944"),
+                    tags$p(timeBw, style = "font-size: 70%; color: #EBC944"),
                     paste('Incident Frequency'),
                     width = NULL)
             })
@@ -467,16 +467,19 @@ shinyServer(function(input, output, session){
                          aes(as.factor(incident_day_of_week), miles_to_nxt_incident,
                              fill = as.factor(incident_day_of_week))) +
                 geom_boxplot() +
+                scale_fill_brewer() +
                 theme(
                     # panel.background = element_rect(fill = "transparent"),
                     plot.background = element_rect(fill = "transparent", color = NA),
                     panel.grid.major = element_blank(),
                     panel.grid.minor = element_blank(),
+                    legend.position = "none",
                     legend.background = element_rect(fill = "transparent"),
                     legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff", size = 8),
+                    plot.title = element_text(colour = "#ffffff", size = 12, hjust = 0.5),
+                    title = element_text(colour = "#ffffff"),
                     axis.text = element_text(colour = '#ffffff'),
-                    axis.text.x = element_text(angle = 0, hjust = 0),
+                    axis.text.x = element_text(angle = 0, size = 10, hjust = 0),
                     legend.text = element_text(colour = '#ffffff')) +
                 labs(y = "Miles", x = 'Day of Week', fill = ' ') +
                 ggtitle("Sample Distribution | Miles Between Incidents")
@@ -503,7 +506,8 @@ shinyServer(function(input, output, session){
                     panel.grid.minor = element_blank(), 
                     legend.background = element_rect(fill = "transparent"), 
                     legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff", size = 8),
+                    plot.title = element_text(colour = "#ffffff", size = 12, hjust = 0.5),
+                    title = element_text(colour = "#ffffff"),
                     axis.text = element_text(colour = '#ffffff'),
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
@@ -546,19 +550,21 @@ shinyServer(function(input, output, session){
                 geom_vline(aes(xintercept = median(mu), color = 'median'),
                            linetype = 'dashed', size = 1) + 
                 theme(
-                    # panel.background = element_rect(fill = "transparent"), 
+                    # panel.background = element_rect(fill = "transparent"),
                     plot.background = element_rect(fill = "transparent", color = NA),
-                    panel.grid.major = element_blank(), 
-                    panel.grid.minor = element_blank(), 
-                    legend.background = element_rect(fill = "transparent"), 
+                    panel.grid.major = element_blank(),
+                    panel.grid.minor = element_blank(),
+                    legend.background = element_rect(fill = "transparent"),
                     legend.box.background = element_rect(fill = "transparent"),
-                    title = element_text(colour = "#ffffff", size = 8),
+                    plot.title = element_text(colour = "#ffffff", size = 12, hjust = 0.5),
+                    plot.subtitle = element_text(colour = "#ffffff", size = 8, hjust = 0.5),
+                    title = element_text(colour = "#ffffff"),
                     axis.text = element_text(colour = '#ffffff'),
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
-                ggtitle("Sampling Distribution | Miles Between Incidents")
+                labs(x = 'Miles', y = 'Frequency', fill = 'Count', 
+                     title = "Sampling Distribution | Miles Between Incidents")
             
             ggplotly(p3)
             
