@@ -436,7 +436,8 @@ shinyServer(function(input, output, session){
         # t-test values
         tTestValue <- reactive({
             
-            tTestValue <- isData()[, incident_day_of_week := as.factor(incident_day_of_week)]
+            tTestValue <- isData()[,
+                                   `:=`(incident_day_of_week = as.factor(incident_day_of_week))]
             
             tTestValue <- t.test(miles_to_nxt_incident ~ incident_day_of_week, 
                                  tTestValue, paired = FALSE)
@@ -519,6 +520,7 @@ shinyServer(function(input, output, session){
             
         })
         
+        # shapiro test
         output$shapiroTest <- renderText({
             
             sTest <- shapiro.test(isData()$miles_to_nxt_incident)
@@ -527,28 +529,62 @@ shinyServer(function(input, output, session){
         })
         
         
+        # histogram - transformed for normality
+        output$isHistogramTrans <- renderPlotly({
+            
+            datTrans <- isData()[, miles_to_nxt_incident := log(miles_to_nxt_incident + 1)]
+            
+            p4 <- ggplot(datTrans,
+                         aes(x = miles_to_nxt_incident)) +
+                geom_histogram(aes(fill = ..count..), bins = 30) +
+                geom_vline(aes(xintercept = mean(miles_to_nxt_incident), 
+                               color = 'mean'),
+                           linetype = 'dashed', size = 1) +
+                geom_vline(aes(xintercept = median(miles_to_nxt_incident), 
+                               color = 'median'),
+                           linetype = 'dashed', size = 1) + 
+                theme(
+                    # panel.background = element_rect(fill = "transparent"), 
+                    plot.background = element_rect(fill = "transparent", color = NA),
+                    panel.grid.major = element_blank(), 
+                    panel.grid.minor = element_blank(), 
+                    legend.background = element_rect(fill = "transparent"), 
+                    legend.box.background = element_rect(fill = "transparent"),
+                    plot.title = element_text(colour = "#ffffff", size = 12, hjust = 0.5),
+                    title = element_text(colour = "#ffffff"),
+                    axis.text = element_text(colour = '#ffffff'),
+                    legend.text = element_text(colour = '#ffffff')) +
+                scale_color_manual(name = '',
+                                   values = c(mean = 'hotpink', median = 'green')) +
+                labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
+                ggtitle("Sample Distribution (log + 1)")
+            
+            ggplotly(p4)
+            
+        })
+        
         # histogram - sampling distribution 
         output$isHistogramSampling <- renderPlotly({
-            
+
             x <- isData()$miles_to_nxt_incident
             nbrSamples <- 1000
             sampleMeans <- rep(NA, nbrSamples)
-            
+
             for (i in 1:nbrSamples) {
                 sample <- sample(x, size = 10, replace = TRUE)
                 sampleMeans[i] <- mean(sample)
             }
-            
+
             sampleMeans <- as.data.frame(sampleMeans)
             names(sampleMeans) <- "mu"
-            
+
             p3 <- ggplot(sampleMeans,
                          aes(x = mu)) +
                 geom_histogram(aes(fill = ..count..), bins = 30) +
                 geom_vline(aes(xintercept = mean(mu), color = 'mean'),
                            linetype = 'dashed', size = 1) +
                 geom_vline(aes(xintercept = median(mu), color = 'median'),
-                           linetype = 'dashed', size = 1) + 
+                           linetype = 'dashed', size = 1) +
                 theme(
                     # panel.background = element_rect(fill = "transparent"),
                     plot.background = element_rect(fill = "transparent", color = NA),
@@ -563,12 +599,13 @@ shinyServer(function(input, output, session){
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Miles', y = 'Frequency', fill = 'Count', 
-                     title = "Sampling Distribution | Miles Between Incidents")
-            
+                labs(x = 'Miles', y = 'Frequency', fill = 'Count',
+                     title = "Distribution of Sample Mean (n = 10)")
+
             ggplotly(p3)
-            
+
         })
+        
         
         # t-test metrics
         output$isTpvalue <- renderValueBox({
@@ -618,8 +655,8 @@ shinyServer(function(input, output, session){
             
             
             valueBox(
-                tags$p(round(tTestValue()$statistic, 2), style = "font-size: 85%; color: #EBC944"),
-                paste('t-value'),
+                tags$p(round(tTestValue()$parameter, 2), style = "font-size: 85%; color: #EBC944"),
+                paste('Degrees of Freedom'),
                 width = NULL)
         })
         

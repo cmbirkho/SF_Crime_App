@@ -38,3 +38,6 @@ https://towardsdatascience.com/linear-programming-in-r-444e9c199280
 - Total Active Time = (Total Distance / avg travel speed) + total resolve speed
 - Avg Resolve Time = (Total Distance / avg travel speed) + avg resolve speed
 - Officers Needed = Total Active Time / Avg Resolve Time
+
+
+on Summary Stats tab if incident_cnt = 0, do nothing and print out a messsage 

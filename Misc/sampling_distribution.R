@@ -1,4 +1,7 @@
-dbPath <- "./Application/sf_crime_db.sqlite"
+library(RSQLite)
+library(DBI)
+library(data.table)
+dbPath <- "./SF_Application/sf_crime_db.sqlite"
 db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 
 isData <- dbGetQuery(db,  "SELECT *
@@ -45,7 +48,12 @@ isData <- isData[incident_day_of_week %in% c('Friday', 'Wednesday'),]
 isData <- isData[,
                  `:=`(incident_day_of_week = as.factor(incident_day_of_week))]
 
-x <- t.test(miles_to_nxt_incident ~ incident_day_of_week, isData, paired = FALSE)
+t.test(miles_to_nxt_incident ~ incident_day_of_week, isData, paired = FALSE)
 df <- data.frame(x$statistic, x$p.value, x$estimate[1], x$estimate[2])
 x$conf.int[2]
 df <- x$estimate
+
+
+x <- isData[incident_day_of_week == 'Wednesday',]
+mean(x$miles_to_nxt_incident)
+mean()

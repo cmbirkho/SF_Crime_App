@@ -130,7 +130,7 @@ shinyServer(navbarPage(
                                                      
                                                      br(),
                                                      
-                                                     h4("The data appears skewed.")
+                                                     h4("The data is skewed.")
                                                      
                                                  ),
                                                  
@@ -143,9 +143,13 @@ shinyServer(navbarPage(
                                                      h4("Is the deviation from normality going to materially impact results?"),
                                                      
                                                      tags$div(tags$ul(
-                                                         tags$li(tags$span("It will not because we intend to perform a t-test and although not valid
-                                                         for small sample sizes with non-normal distributions a t-test is valid
-                                                         for large sample sizes with non-normal distributions."))
+                                                         tags$li(tags$span("Our intention is to complete a t-test to compare the means of
+                                                                            the two groups. The t-test is a robust test with the assumption
+                                                                            to normality. This means that some deviation from normality will not 
+                                                                            have a large impact on our Type 1 error rate. The exception to this 
+                                                                            is if the ratio of the smallest to largest group is greater than
+                                                                            1.5. Since our data meets this exception we should further validate 
+                                                                            that a t-test is appropriate."))
                                                      ))
 
                                                  ),
@@ -155,13 +159,47 @@ shinyServer(navbarPage(
                                                  
                                                  fluidRow(
                                                      
-                                                     h4("Let's take a look at a sampling distribution of the data."),
+                                                     h4("Let's perform a log + 1 transformation on the data and review its distribution."),
+                                                   
+                                                     column(width = 6, 
+                                                            plotlyOutput("isHistogramTrans",
+                                                                         width = 'auto', height = '600px')),
+                                                     
+                                                     
+                                                     
+                                                 ),
+                                                 
+                                                 fluidRow(
+                                                     
+                                                     tags$div(tags$ul(
+                                                         tags$li(tags$span("After a log transformation the data still is still skewed."))
+                                                     ))
+                                                     
+                                                 ),
+                                                 
+                                                 br(),
+                                                 br(),
+                                                 
+                                                 fluidRow(
+                                                     
+                                                     h4("Let's take a look at a sampling distribution of the data before log transformation."),
                                                      
                                                      column(width = 6,
                                                             plotlyOutput("isHistogramSampling",
                                                                          width = 'auto', height = '600px'))
                                                      
-                                                 )
+                                                 ),
+                                                 
+                                                 fluidRow(
+                                                     
+                                                     tags$div(tags$ul(
+                                                         tags$li(tags$span("This suggests that a t-test would be ok with a sample size of 10."))
+                                                     ))
+                                                     
+                                                 ),
+                                                 
+                                                 br(),
+                                                 br()
                                         ),
                                         
                                         tabPanel(title = "Tests & Conclusions",
@@ -170,7 +208,7 @@ shinyServer(navbarPage(
                                                  
                                                  fluidRow(
                                                      
-                                                     h4("To test our hypothesis we will use an independent samples t-test."),
+                                                     h4("To test our hypothesis we will use a Welch's Two Sample t-test."),
                                                      br(),
                                                      h4("T-Test Metrics: "),
                                                      column(width = 4, valueBoxOutput("isTpvalue")),
@@ -192,8 +230,7 @@ shinyServer(navbarPage(
                                                  fluidRow(
                                                      h4("Conclusions:"),
                                                      tags$div(tags$ul(
-                                                         tags$li(tags$span("The mean under Friday is greater than the mean under Wednesday.")),
-                                                         tags$li(tags$span("The p-value is greater than the significance level of 0.05.")),
+                                                         tags$li(tags$span("The p-value is > 0.05 indicating weak evidence against the null hypothesis.")),
                                                          tags$li(tags$span("The confidence interval contains zero.")),
                                                          tags$li(tags$span("Based on these results we can infer that the number of incidents
                                                          does not have a statistically significant effect on the distance between them. 
