@@ -439,7 +439,7 @@ shinyServer(function(input, output, session){
             tTestValue <- isData()[,
                                    `:=`(incident_day_of_week = as.factor(incident_day_of_week))]
             
-            tTestValue <- t.test(miles_to_nxt_incident ~ incident_day_of_week, 
+            tTestValue <- t.test(ft_to_nxt_incident ~ incident_day_of_week, 
                                  tTestValue, paired = FALSE)
             
             tTestValue
@@ -465,7 +465,7 @@ shinyServer(function(input, output, session){
         output$isBoxPlot <- renderPlotly({
             
             p2 <- ggplot(isData(),
-                         aes(as.factor(incident_day_of_week), miles_to_nxt_incident,
+                         aes(as.factor(incident_day_of_week), ft_to_nxt_incident,
                              fill = as.factor(incident_day_of_week))) +
                 geom_boxplot() +
                 scale_fill_brewer() +
@@ -482,8 +482,8 @@ shinyServer(function(input, output, session){
                     axis.text = element_text(colour = '#ffffff'),
                     axis.text.x = element_text(angle = 0, size = 10, hjust = 0),
                     legend.text = element_text(colour = '#ffffff')) +
-                labs(y = "Miles", x = 'Day of Week', fill = ' ') +
-                ggtitle("Sample Distribution | Miles Between Incidents")
+                labs(y = "Feet", x = 'Day of Week', fill = ' ') +
+                ggtitle("Sample Distribution | Feet Between Incidents")
 
             ggplotly(p2)
         })
@@ -492,12 +492,12 @@ shinyServer(function(input, output, session){
         output$isHistogram <- renderPlotly({
             
             p1 <- ggplot(isData(),
-                         aes(x = miles_to_nxt_incident)) +
+                         aes(x = ft_to_nxt_incident)) +
                 geom_histogram(aes(fill = ..count..), bins = 30) +
-                geom_vline(aes(xintercept = mean(miles_to_nxt_incident), 
+                geom_vline(aes(xintercept = mean(ft_to_nxt_incident), 
                                color = 'mean'),
                            linetype = 'dashed', size = 1) +
-                geom_vline(aes(xintercept = median(miles_to_nxt_incident), 
+                geom_vline(aes(xintercept = median(ft_to_nxt_incident), 
                                color = 'median'),
                            linetype = 'dashed', size = 1) + 
                 theme(
@@ -513,8 +513,8 @@ shinyServer(function(input, output, session){
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
-                ggtitle("Sample Distribution | Miles Between Incidents")
+                labs(x = 'Feet', y = 'Frequency', fill = 'Count') +
+                ggtitle("Sample Distribution | Feet Between Incidents")
             
             ggplotly(p1)
             
@@ -523,7 +523,7 @@ shinyServer(function(input, output, session){
         # shapiro test
         output$shapiroTest <- renderText({
             
-            sTest <- shapiro.test(isData()$miles_to_nxt_incident)
+            sTest <- shapiro.test(isData()$ft_to_nxt_incident)
             paste("Shapiro Wilk's test: p-value = ", sTest$p.value, ".  Since the p-value is less 
                   than 0.05 it implies our variable is not normally distributed.")
         })
@@ -532,15 +532,15 @@ shinyServer(function(input, output, session){
         # histogram - transformed for normality
         output$isHistogramTrans <- renderPlotly({
             
-            datTrans <- isData()[, miles_to_nxt_incident := log(miles_to_nxt_incident + 1)]
+            datTrans <- isData()[, ft_to_nxt_incident := log(ft_to_nxt_incident + 1)]
             
             p4 <- ggplot(datTrans,
-                         aes(x = miles_to_nxt_incident)) +
+                         aes(x = ft_to_nxt_incident)) +
                 geom_histogram(aes(fill = ..count..), bins = 30) +
-                geom_vline(aes(xintercept = mean(miles_to_nxt_incident), 
+                geom_vline(aes(xintercept = mean(ft_to_nxt_incident), 
                                color = 'mean'),
                            linetype = 'dashed', size = 1) +
-                geom_vline(aes(xintercept = median(miles_to_nxt_incident), 
+                geom_vline(aes(xintercept = median(ft_to_nxt_incident), 
                                color = 'median'),
                            linetype = 'dashed', size = 1) + 
                 theme(
@@ -556,7 +556,7 @@ shinyServer(function(input, output, session){
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Miles', y = 'Frequency', fill = 'Count') +
+                labs(x = 'Feet', y = 'Frequency', fill = 'Count') +
                 ggtitle("Sample Distribution (log + 1)")
             
             ggplotly(p4)
@@ -566,7 +566,7 @@ shinyServer(function(input, output, session){
         # histogram - sampling distribution 
         output$isHistogramSampling <- renderPlotly({
 
-            x <- isData()$miles_to_nxt_incident
+            x <- isData()$ft_to_nxt_incident
             nbrSamples <- 1000
             sampleMeans <- rep(NA, nbrSamples)
 
@@ -599,7 +599,7 @@ shinyServer(function(input, output, session){
                     legend.text = element_text(colour = '#ffffff')) +
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Miles', y = 'Frequency', fill = 'Count',
+                labs(x = 'Feet', y = 'Frequency', fill = 'Count',
                      title = "Distribution of Sample Mean (n = 10)")
 
             ggplotly(p3)

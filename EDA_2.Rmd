@@ -1,0 +1,56 @@
+---
+title: "EDA_2"
+author: "Connor Birkhold"
+date: "1/25/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 8, fig.height = 5)
+```
+
+```{r include=FALSE}
+library(data.table)
+library(tidyverse)
+library(lubridate)
+library(RSQLite)
+library(DBI)
+```
+
+
+```{r}
+dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sqlite"
+
+db <- dbConnect(SQLite(), dbname = dbPath)
+
+df <- dbGetQuery(db,  "SELECT *
+                        FROM incident_reports ir
+                        JOIN ml_data_incidents ml
+                        ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd
+                        AND ir.incident_day_of_week = ml.incident_day_of_week
+                        AND ir.police_district = ml.police_district;")
+
+dbDisconnect(db)
+
+setDT(df)
+
+```
+
+```{r}
+
+plot(df$ft_to_nxt_incident, df$min_to_nxt_incident)
+
+
+# trim data and then plot
+upCut <- quantile(df$min_to_nxt_incident, 0.95)
+lowCut <- quantile(df$min_to_nxt_incident, 0.05)
+
+dfSub <- df[min_to_nxt_incident > lowCut &
+                min_to_nxt_incident < upCut,]
+
+plot(dfSub$ft_to_nxt_incident, dfSub$min_to_nxt_incident)
+
+```
+

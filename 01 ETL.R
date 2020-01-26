@@ -139,7 +139,7 @@ sfCrime <- sfCrime[, c("incident_id_nbr_cd",
 #===============================================================================
 # LOAD THE DATA INTO SQLITE
 # create a connection to the database
-dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/Application/sf_crime_db.sqlite"
+dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sqlite"
 db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 
 # Set up incident_reports table

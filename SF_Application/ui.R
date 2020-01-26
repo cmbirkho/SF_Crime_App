@@ -92,8 +92,8 @@ shinyServer(navbarPage(
                         h3("Does the frequency of incidents impact the distance between them?"),
                         br(),
                         h4("Hypothesis: The more incidents there are the shorter the distance between them."),
-                        h5("HO: The mean distance under Friday is greater than or equal to the mean under Wednesday."),
-                        h5("HA: The mean distance under Friday is less than the mean under Wednesday."),
+                        h5("HO: The mean under Friday is equal to or greater than the mean under Wednesday."),
+                        h5("HA: The mean under Friday is less than the mean under Wednesday."),
                         br(),
                         tags$div(tags$ul(
                             tags$li(tags$span("~35% of incidents occur on Friday and ~10% of incidents occur on Wednesday.")),
@@ -130,7 +130,7 @@ shinyServer(navbarPage(
                                                      
                                                      br(),
                                                      
-                                                     h4("The data is skewed.")
+                                                     h4("The distribution is skewed.")
                                                      
                                                  ),
                                                  
@@ -230,15 +230,18 @@ shinyServer(navbarPage(
                                                  fluidRow(
                                                      h4("Conclusions:"),
                                                      tags$div(tags$ul(
-                                                         tags$li(tags$span("The p-value is > 0.05 indicating weak evidence against the null hypothesis.")),
+                                                         tags$li(tags$span("The mean under Friday is less than the mean under Wednesday. 
+                                                                           However, the p-value is greater than 0.05 indicating weak evidence against the null hypothesis.")),
+                                                         tags$li(tags$span("The p-value is saying that assuming the incident count (aka day of week) has no effect, you'd 
+                                                                           obtain the observed difference or more in 11% of studies due to random sampling error.")),
                                                          tags$li(tags$span("The confidence interval contains zero.")),
                                                          tags$li(tags$span("Based on these results we can infer that the number of incidents
-                                                         does not have a statistically significant effect on the distance between them. 
-                                                         Thus we fail to reject the null hypothesis.")),
+                                                                            does not have a statistically significant effect on mean distance between them. 
+                                                                            Thus we fail to reject the null hypothesis.")),
                                                          tags$li(tags$span("Applying these findings to real life we can infer that on days when incident counts
-                                                        are high officers will still be traveling the same distance between incidents and thus
-                                                        taking the same time to respond from one incident to the next. This logic would support 
-                                                        the need for having more officers on duty during days with a higher frequency of incidents."))
+                                                                            are high officers will still be traveling the same distance between incidents and thus
+                                                                            taking the same time to respond from one incident to the next. This logic would support 
+                                                                            the need for having more officers on duty during days with a higher frequency of incidents."))
                                                      ))
                                                  )
                                         )
@@ -408,8 +411,7 @@ shinyServer(navbarPage(
              fluidRow(
                  
                  column(width = 6,
-                        h4("Due to inconsistencies in the data a sample of the data was taken in 
-                            an attempt to more accurately mirror a real life scenario. 
+                        h4("Due to inconsistencies in the data, a sample of the data was taken. 
                             The data used in this project was filtered to incidents during the week of 2019-09-29 to 2019-10-05. 
                             This accounts for ~60% percent of the data from this source."))
              ),

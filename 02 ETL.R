@@ -11,7 +11,7 @@ library(geosphere)
 
 # Load data from db
 # create a connection to the database
-dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/Application/sf_crime_db.sqlite"
+dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sqlite"
 db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 
 sfCrime <- dbGetQuery(db, "SELECT * FROM incident_reports;")
@@ -51,7 +51,7 @@ time.till <- function(data){
     data$nxt_incident_datetime <- lead(data$incident_datetime, n = 1)
     
     data$min_to_nxt_incident <- difftime(data$nxt_incident_datetime, data$incident_datetime,
-                                            units = "mins")
+                                            units = "secs")
     
     data$min_to_nxt_incident <- as.numeric(data$min_to_nxt_incident)
     
@@ -62,8 +62,8 @@ time.till <- function(data){
 
 sfCrime <- time.till(data = sfCrime)
 
-# miles_to_nxt_incident
-dist.Miles <- function(data){
+# ft_to_nxt_incident
+dist.ft <- function(data){
     
     data$nxt_lat <- lead(data$latitude, n = 1)
     data$nxt_lon <- lead(data$longitude, n = 1)
@@ -74,7 +74,7 @@ dist.Miles <- function(data){
                                          fun = distHaversine)
     }
     
-    data$miles_to_nxt_incident <- round(data$distance_meters / 1609.34, 2)
+    data$ft_to_nxt_incident <- round(data$distance_meters / 3.28084, 2)
     
     data <- data[, - c("nxt_lat",
                        "nxt_lon",
@@ -82,7 +82,7 @@ dist.Miles <- function(data){
     return(data)
 }
 
-sfCrime <- dist.Miles(data = sfCrime)
+sfCrime <- dist.ft(data = sfCrime)
 
 
 # remove NA at end of tables caused by lead functions 
@@ -100,7 +100,7 @@ sfCrime <- sfCrime[, - c("latitude",
 # Load the new table into sqlite
 
 # create a connection to the database
-dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/Application/sf_crime_db.sqlite"
+dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sqlite"
 db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 
 # Set up incident_reports table
@@ -111,7 +111,7 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 #                 incident_day_of_week TEXT,
 #                 police_district TEXT,
 #                 min_to_nxt_incident REAL,
-#                 miles_to_nxt_incident REAL,
+#                 ft_to_nxt_incident REAL,
 #                 UNIQUE (incident_id_nbr_cd));")
 #-------------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ load_data <- function(df) {
                                      :incident_day_of_week,
                                      :police_district,
                                      :min_to_nxt_incident,
-                                     :miles_to_nxt_incident);")
+                                     :ft_to_nxt_incident);")
     dbBind(insertnew, params = df)  # execute
     dbClearResult(insertnew) # release the prepared statement
     
