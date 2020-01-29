@@ -221,3 +221,11 @@ output$aboutChart <- renderPlotly({
         ggplotly(p3)
         
     })
+    
+
+    
+# suppress red output error messages
+tags$style(type="text/css",
+           ".shiny-output-error { visibility: hidden; }",
+           ".shiny-output-error:before { visibility: hidden; }"
+),

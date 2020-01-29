@@ -12,11 +12,14 @@ knitr::opts_chunk$set(fig.width = 8, fig.height = 5)
 ```
 
 ```{r include=FALSE}
+rm(list = ls())
+
 library(data.table)
 library(tidyverse)
 library(lubridate)
 library(RSQLite)
 library(DBI)
+library(caret)
 ```
 
 
@@ -26,11 +29,7 @@ dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sq
 db <- dbConnect(SQLite(), dbname = dbPath)
 
 df <- dbGetQuery(db,  "SELECT *
-                        FROM incident_reports ir
-                        JOIN ml_data_incidents ml
-                        ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd
-                        AND ir.incident_day_of_week = ml.incident_day_of_week
-                        AND ir.police_district = ml.police_district;")
+                       FROM incident_reports;")
 
 dbDisconnect(db)
 
@@ -39,18 +38,68 @@ setDT(df)
 ```
 
 ```{r}
+df <- df[, type := ifelse(vehicle_flag == 1, 'vehicle',
+                          ifelse(weapon_flag == 1, 'weapon', 'other'))]
 
-plot(df$ft_to_nxt_incident, df$min_to_nxt_incident)
+# Convert the character columns to factors
+convStr <- function(x){
+  for(i in length(x)){
+    catVar <- select_if(x, is.character)
+    catVar <- lapply(catVar, as.factor)
+    catVar <- as.data.frame(catVar)
+    
+    numVar <- select_if(x, is.numeric)
+    numVar <- lapply(numVar, as.numeric)
+    numVar <- as.data.frame(numVar)
+    
+    final <- cbind(catVar, numVar)
+    return(final)
+  }
+}
+
+df <- convStr(df)
+
+```
+
+```{r}
+set.seed(54321)
+indexes <- createDataPartition(df$type,
+                               times = 1,
+                               p = 0.7,
+                               list = FALSE)
+
+training <- df[indexes,]
+testing <- df[- indexes,]
+
+```
+
+```{r}
+# Use 10 fold cross validation (trainControl)
+# In short, build 10 models and evaluate how good they are on the data
+# Repeat it 3 times (30 models)
+# Complete a grid search
+train.control <- trainControl(method = "repeatedcv",
+                              number = 10,
+                              repeats = 3,
+                              search = "grid")
 
 
-# trim data and then plot
-upCut <- quantile(df$min_to_nxt_incident, 0.95)
-lowCut <- quantile(df$min_to_nxt_incident, 0.05)
+# Train the model using 10 fold cross validation repeated 3 times
+caret.cv <- train(type ~ incident_day_of_week + police_district + incident_category ,
+                  data = training,
+                  method = "xgbTree",
+                  trControl = train.control)
 
-dfSub <- df[min_to_nxt_incident > lowCut &
-                min_to_nxt_incident < upCut,]
+```
 
-plot(dfSub$ft_to_nxt_incident, dfSub$min_to_nxt_incident)
 
+```{r}
+caret.cv
+```
+
+```{r}
+prd <- predict(caret.cv, testing)
+
+confusionMatrix(prd, testing$type)
 ```
 

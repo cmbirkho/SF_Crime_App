@@ -41,3 +41,6 @@ https://towardsdatascience.com/linear-programming-in-r-444e9c199280
 
 
 on Summary Stats tab if incident_cnt = 0, do nothing and print out a messsage 
+
+
+Do a classification machine learning problem. Determining if the crime 

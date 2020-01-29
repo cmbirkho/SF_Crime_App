@@ -32,12 +32,6 @@ shinyServer(navbarPage(
                                  
                                  tabPanel(title = "Summary Statistics", value = 'summaryStats',
                                           
-                                          # suppress red output error messages
-                                          tags$style(type="text/css",
-                                                     ".shiny-output-error { visibility: hidden; }",
-                                                     ".shiny-output-error:before { visibility: hidden; }"
-                                          ),
-                                          
                                           fluidRow(
                                               column(width = 3,  valueBoxOutput("nbrIncidents")),
                                               column(width = 3,  valueBoxOutput("avgNbrIncidents")),
@@ -151,7 +145,7 @@ shinyServer(navbarPage(
                                                                             1.5. Since our data meets this exception we should further validate 
                                                                             that a t-test is appropriate."))
                                                      ))
-
+                                                     
                                                  ),
                                                  
                                                  br(),
@@ -159,8 +153,8 @@ shinyServer(navbarPage(
                                                  
                                                  fluidRow(
                                                      
-                                                     h4("Let's perform a log + 1 transformation on the data and review its distribution."),
-                                                   
+                                                     h4("Let's perform a log10 + 1 transformation on the data and review its distribution."),
+                                                     
                                                      column(width = 6, 
                                                             plotlyOutput("isHistogramTrans",
                                                                          width = 'auto', height = '600px')),
@@ -193,7 +187,7 @@ shinyServer(navbarPage(
                                                  fluidRow(
                                                      
                                                      tags$div(tags$ul(
-                                                         tags$li(tags$span("This suggests that a t-test would be ok with a sample size of 10."))
+                                                         tags$li(tags$span("This suggests that a t-test would be ok with a sample size of 30."))
                                                      ))
                                                      
                                                  ),
@@ -230,11 +224,11 @@ shinyServer(navbarPage(
                                                  fluidRow(
                                                      h4("Conclusions:"),
                                                      tags$div(tags$ul(
-                                                         tags$li(tags$span("The mean under Friday is less than the mean under Wednesday. 
-                                                                           However, the p-value is greater than 0.05 indicating weak evidence against the null hypothesis.")),
+                                                         tags$li(tags$span("The mean under Friday is greater than the mean under Wednesday.")),
+                                                         tags$li(tags$span("The p-value is greater than 0.05 indicating weak evidence against the null hypothesis.")),
                                                          tags$li(tags$span("The p-value is saying that assuming the incident count (aka day of week) has no effect, you'd 
-                                                                           obtain the observed difference or more in 11% of studies due to random sampling error.")),
-                                                         tags$li(tags$span("The confidence interval contains zero.")),
+                                                                           obtain the observed difference or more in 84% of studies due to random sampling error.")),
+                                                         tags$li(tags$span("Further supporting the lack of evidence against the null hypothesis the confidence interval contains zero.")),
                                                          tags$li(tags$span("Based on these results we can infer that the number of incidents
                                                                             does not have a statistically significant effect on mean distance between them. 
                                                                             Thus we fail to reject the null hypothesis.")),
@@ -257,25 +251,13 @@ shinyServer(navbarPage(
     
     tabPanel("Machine Learning", value = "machineLearning",
              
-             h4("Goal: Predict the distance from and the time until the next incident"),
+             h4(""),
              
              br(),
              
              sidebarLayout(
                  
                  sidebarPanel(width = 3,
-                              
-                              selectInput("pick_model",
-                                          label = "Choose the model:",
-                                          choices = c(" ",
-                                                      "Linear Regression",
-                                                      "Logistic Regression",
-                                                      "Random Forest"),
-                                          selected = NULL, multiple = FALSE),
-                              
-                              uiOutput("ml_ui_districtList"),
-                              
-                              uiOutput("ml_ui_dayOfweekList")
                               
                               
                  ),
@@ -295,49 +277,6 @@ shinyServer(navbarPage(
                      )
                      
                  )
-             )
-             
-    ),
-    
-    tabPanel("Optimization", value = "optimize",
-             
-             mainPanel(
-                 
-                 tabsetPanel(
-                     
-                     tabPanel("Problem Definition",
-                              
-                              h5("How do we minimize the number of officers needed on duty without sacrificing public safety?"),
-                              br(),
-                              h5("Assumptions:")
-                              
-                     ),
-                     
-                     tabPanel("Model Construction",
-                              
-                              
-                     ),
-                     
-                     tabPanel("Model Solution",
-                              sidebarLayout(
-                                  
-                                  sidebarPanel(
-                                      
-                                      h5("Model Inputs")
-                                      
-                                  ),
-                                  
-                                  mainPanel(
-                                      
-                                      h5("test")
-                                      
-                                  )
-                              )
-                              
-                     )
-                     
-                 )
-                 
              )
              
     ),
@@ -411,9 +350,9 @@ shinyServer(navbarPage(
              fluidRow(
                  
                  column(width = 6,
-                        h4("Due to inconsistencies in the data, a sample of the data was taken. 
-                            The data used in this project was filtered to incidents during the week of 2019-09-29 to 2019-10-05. 
-                            This accounts for ~60% percent of the data from this source."))
+                        h5("Due to inconsistencies in the data, a sample of the data from the above source was used for this project. 
+                            The data was filtered to incident reports during the week of 2019-09-29 to 2019-10-05. 
+                            Which accounts for ~60% percent of the incident reports from this source at the time the data was collected."))
              ),
     )
 ))

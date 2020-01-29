@@ -78,6 +78,8 @@ sfCrime <- sfCrime[, vehicle_flag := ifelse(grepl("vehicle", incident_subcategor
                                               grepl("vehicle", incident_description,
                                                     ignore.case = TRUE) == TRUE |
                                               grepl("carjacking", incident_subcategory,
+                                                    ignore.case = TRUE) == TRUE |
+                                              grepl("Hit & Run", incident_description,
                                                     ignore.case = TRUE) == TRUE,
                    1, 0)]
 
