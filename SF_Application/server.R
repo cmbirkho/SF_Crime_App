@@ -713,14 +713,6 @@ shinyServer(function(input, output, session){
         
     })
     
-#-------------------------------------------------------------------------------
-    # observe event for OPTIMIZATION tab
-    observeEvent(input$navbarPages == "optimize", {
-        
-        
-        
-        
-    })
     
 #-------------------------------------------------------------------------------
     # observe event for DATA DOWNLOAD tab
@@ -731,19 +723,13 @@ shinyServer(function(input, output, session){
         db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
         
         sfCrimeDataDld <- dbGetQuery(db, "SELECT 
-                                            incident_id_nbr_cd,
-                                            latitude,
-                                            longitude,
-                                            police_district,
-                                            incident_category,
-                                            incident_day_of_week,
-                                            incident_date,
-                                            incident_datetime,
-                                            incident_value,
-                                            report_date,
-                                            report_datetime,
-                                            incident_cnt
-                                        FROM incident_reports;")
+                                            ir.*
+                                            ,ml.min_to_nxt_incident
+                                            ,ft_to_nxt_incident
+                                            ,min_bw_report
+                                          FROM incident_reports ir
+                                          JOIN ml_data_incidents ml
+                                          ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd;")
         
         dbDisconnect(db)
         setDT(sfCrimeDataDld) # convert to data.table
@@ -771,10 +757,6 @@ shinyServer(function(input, output, session){
     
 #-------------------------------------------------------------------------------
     
-    # observe event for ABOUT tab
-    observeEvent(input$navbarPages == "aboutTab", {
-        
-        
-    })
+    
 #===============================================================================
 })

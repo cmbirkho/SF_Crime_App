@@ -36,6 +36,7 @@ sfCrime <- sfCrime[, c("incident_id_nbr_cd",
                        "incident_day_of_week",
                        "police_district",
                        "incident_datetime",
+                       "report_datetime",
                        "latitude",
                        "longitude")]
 
@@ -84,6 +85,12 @@ dist.ft <- function(data){
 
 sfCrime <- dist.ft(data = sfCrime)
 
+# min_bw_report - minutes b/w incident and report
+sfCrime <- sfCrime[, min_bw_report := difftime(report_datetime, 
+                                               incident_datetime, 
+                                               units = c("mins"))]
+
+sfCrime$min_bw_report <- as.numeric(sfCrime$min_bw_report)
 
 # remove NA at end of tables caused by lead functions 
 sfCrime <- na.omit(sfCrime)
@@ -93,6 +100,7 @@ sfCrime <- sfCrime[, incident_datetime := as.character(incident_datetime)]
 
 sfCrime <- sfCrime[, - c("latitude",
                          "longitude",
+                         "report_datetime",
                          "incident_datetime")]
 
 
@@ -106,13 +114,14 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 # Set up incident_reports table
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
-# dbExecute(db, "CREATE TABLE ml_data_incidents
-#                 (incident_id_nbr_cd TEXT NOT NULL,
-#                 incident_day_of_week TEXT,
-#                 police_district TEXT,
-#                 min_to_nxt_incident REAL,
-#                 ft_to_nxt_incident REAL,
-#                 UNIQUE (incident_id_nbr_cd));")
+dbExecute(db, "CREATE TABLE ml_data_incidents
+                (incident_id_nbr_cd TEXT NOT NULL,
+                incident_day_of_week TEXT,
+                police_district TEXT,
+                min_to_nxt_incident REAL,
+                ft_to_nxt_incident REAL,
+                min_bw_report,
+                UNIQUE (incident_id_nbr_cd));")
 #-------------------------------------------------------------------------------
 
 load_data <- function(df) {
@@ -124,7 +133,8 @@ load_data <- function(df) {
                                      :incident_day_of_week,
                                      :police_district,
                                      :min_to_nxt_incident,
-                                     :ft_to_nxt_incident);")
+                                     :ft_to_nxt_incident,
+                                     :min_bw_report);")
     dbBind(insertnew, params = df)  # execute
     dbClearResult(insertnew) # release the prepared statement
     

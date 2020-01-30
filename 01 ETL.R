@@ -23,7 +23,7 @@ sfCrime <- sfCrime[, incident_id_nbr_cd := paste(sfCrime$incident_id,
                                                  sfCrime$incident_number, 
                                                  sfCrime$incident_code, sep = "-")]
 
-# Clean up dates; Add incident_month
+# Clean up dates
 sfCrime <- sfCrime[, 
                    `:=`(incident_date = str_sub(incident_date, 1, 10),
                         report_date = str_sub(report_datetime, 1, 10),
@@ -79,6 +79,7 @@ sfCrime <- sfCrime[, vehicle_flag := ifelse(grepl("vehicle", incident_subcategor
                                                     ignore.case = TRUE) == TRUE |
                                               grepl("carjacking", incident_subcategory,
                                                     ignore.case = TRUE) == TRUE |
+                                              #new not in server data
                                               grepl("Hit & Run", incident_description,
                                                     ignore.case = TRUE) == TRUE,
                    1, 0)]
