@@ -39,13 +39,30 @@ sfCrime <- sfCrime[,
          incident_date = as.character(incident_date),
          report_date = as.character(report_date),
          incident_datetime = as.POSIXct(incident_datetime, format = "%Y-%m-%d %H:%M"),
-         report_datetime = as.POSIXct(report_datetime, format = "%Y-%m-%d %H:%M"))] %>%
+         report_datetime = as.POSIXct(report_datetime, format = "%Y-%m-%d %H:%M"),
+         incident_time = as.POSIXct(incident_time, format = "%H:%M"))] %>%
   # date filter (one week of data, contains the most incident reports)
   .[incident_date >= '2019-09-29' & incident_date <= '2019-10-05', ] %>%
   # convert to character for sqlite
   .[,
     `:=`(incident_datetime = as.character(incident_datetime),
          report_datetime = as.character(report_datetime))]
+
+# add incident_time_of_day feature
+dawnFilt <- as.POSIXct(paste(Sys.Date(), "06:00:00"), format = "%Y-%m-%d %H:%M")
+morningFilt <-  as.POSIXct(paste(Sys.Date(), "12:00:00"), format = "%Y-%m-%d %H:%M")
+afternoonFilt <-  as.POSIXct(paste(Sys.Date(), "18:00:00"), format = "%Y-%m-%d %H:%M")
+nightFilt <- as.POSIXct(paste(Sys.Date(), "24:00:00"), format = "%Y-%m-%d %H:%M")
+
+sfCrime <- sfCrime[,
+                   incident_time_of_day := ifelse(incident_time <= dawnFilt, 'dawn',
+                                                  ifelse(incident_time > dawnFilt &
+                                                           incident_time <= morningFilt, 'morning',
+                                                         ifelse(incident_time > morningFilt &
+                                                                  incident_time <= afternoonFilt, 'afternoon',
+                                                                ifelse(incident_time > afternoonFilt &
+                                                                         incident_time <= nightFilt, 'night', NA))))]
+
 
 # Remove all "@computed_region" columns
 colNm <- grep("@computed_region", names(sfCrime), value = TRUE)
@@ -79,7 +96,6 @@ sfCrime <- sfCrime[, vehicle_flag := ifelse(grepl("vehicle", incident_subcategor
                                                     ignore.case = TRUE) == TRUE |
                                               grepl("carjacking", incident_subcategory,
                                                     ignore.case = TRUE) == TRUE |
-                                              #new not in server data
                                               grepl("Hit & Run", incident_description,
                                                     ignore.case = TRUE) == TRUE,
                    1, 0)]
@@ -122,6 +138,7 @@ sfCrime <- sfCrime[, c("incident_id_nbr_cd",
                        "incident_date",
                        "incident_datetime",
                        "incident_day_of_week",
+                       "incident_time_of_day",
                        "incident_year",
                        "incident_month",
                        "report_date",
@@ -153,6 +170,7 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 #                 incident_date TEXT NOT NULL,
 #                 incident_datetime TEXT,
 #                 incident_day_of_week TEXT,
+#                 incident_time_of_day TEXT,
 #                 incident_year TEXT,
 #                 incident_month TEXT,
 #                 report_date TEXT,
@@ -177,16 +195,23 @@ load_data <- function(df) {
     print("=====Uploading data to incident_reports table=====")
     # we want to add only the new combinations
     insertnew <- dbSendQuery(db, "INSERT OR IGNORE INTO incident_reports VALUES 
-                                    (:incident_id_nbr_cd, :incident_date,
+                                    (:incident_id_nbr_cd, 
+                                    :incident_date,
                                     :incident_datetime,
-                                    :incident_day_of_week, :incident_year,
+                                    :incident_day_of_week, 
+                                    :incident_time_of_day,
+                                    :incident_year,
                                     :incident_month,
                                     :report_date, 
                                     :report_datetime,
                                     :police_district,
-                                    :analysis_neighborhood, :latitude, :longitude,
-                                    :report_type_description, :incident_category,
-                                    :incident_subcategory, :incident_description,
+                                    :analysis_neighborhood, 
+                                    :latitude, 
+                                    :longitude,
+                                    :report_type_description, 
+                                    :incident_category,
+                                    :incident_subcategory, 
+                                    :incident_description,
                                     :incident_value,
                                     :vehicle_flag,
                                     :weapon_flag,

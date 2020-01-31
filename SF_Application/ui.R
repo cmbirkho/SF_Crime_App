@@ -197,7 +197,7 @@ shinyServer(navbarPage(
                                                          tags$li(tags$span("The mean under Friday is greater than the mean under Wednesday.")),
                                                          tags$li(tags$span("The p-value is greater than 0.05 indicating weak evidence against the null hypothesis.")),
                                                          tags$li(tags$span("The p-value is saying that assuming the incident count (aka day of week) has no effect, you'd 
-                                                                           obtain the observed difference or more in 84% of studies due to random sampling error.")),
+                                                                           obtain the observed difference or more in 74% of studies due to random sampling error.")),
                                                          tags$li(tags$span("Further supporting the lack of evidence against the null hypothesis the confidence interval contains zero.")),
                                                          tags$li(tags$span("Based on these results we can infer that the number of incidents
                                                                             does not have a statistically significant effect on mean distance between them. 

@@ -5,6 +5,6 @@ account: cmbirkho
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1685421
-bundleId: 2764443
+bundleId: 2766870
 url: https://cmbirkho.shinyapps.io/sf_application/
-when: 1580404160.28237
+when: 1580489762.51202

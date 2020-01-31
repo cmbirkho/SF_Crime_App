@@ -124,6 +124,7 @@ shinyServer(function(input, output, session){
                                             police_district,
                                             incident_category,
                                             incident_day_of_week,
+                                            incident_time_of_day,
                                             incident_date,
                                             incident_datetime,
                                             incident_value,
@@ -137,10 +138,7 @@ shinyServer(function(input, output, session){
         sfCrimeData[, 
                     `:=`(incident_date = ymd(incident_date),
                          incident_datetime = as.POSIXct(incident_datetime,
-                                                        format = "%Y-%m-%d %H:%M:%S"))] 
-        
-        # get a total incident count
-        totalIncidents <- sum(sfCrimeData$incident_cnt)
+                                                        format = "%Y-%m-%d %H:%M:%S"))]
         
         #-----------------------------------------------------------------------
         # summary statistics tab
@@ -182,7 +180,9 @@ shinyServer(function(input, output, session){
             # percentage by district chart
             output$ui_pctDistrictChart <- renderPlotly({
               
-                pctDistrict <- pctData()[, .(pct = (sum(incident_cnt)/totalIncidents) * 100),
+                incidentCountDistrict <- sum(pctData()$incident_cnt)
+                
+                pctDistrict <- pctData()[, .(pct = (sum(incident_cnt)/incidentCountDistrict) * 100),
                                          by = police_district]
                 
                 pctDistrict$police_district <- factor(pctDistrict$police_district,
@@ -204,8 +204,10 @@ shinyServer(function(input, output, session){
 
             # percentage by day of week
             output$ui_pctDayofweek <- renderPlotly({
+                
+                incidentCountWeek <- sum(pctData()$incident_cnt)
 
-                pctDay <- pctData()[, .(pct = sum(incident_cnt)/totalIncidents),
+                pctDay <- pctData()[, .(pct = sum(incident_cnt)/incidentCountWeek),
                                     by = incident_day_of_week]
 
 
@@ -233,24 +235,26 @@ shinyServer(function(input, output, session){
 
             })
 
-            # larceny theft incident value
+            # incidents by time of day
             output$ui_theftValue <- renderPlotly({
+                
+                incidentCountDay <- sum(pctData()$incident_cnt)
+                
+                cntTheft <- pctData()[,
+                                      .(pct = (sum(incident_cnt)/incidentCountDay) * 100),
+                                      by = incident_time_of_day]
 
-                cntTheft <- pctData()[incident_category == 'Larceny Theft',
-                                      .(cnt = sum(incident_cnt)),
-                                      by = incident_value]
-
-                cntTheft$incident_value <- factor(cntTheft$incident_value,
-                                                      levels = unique(cntTheft$incident_value)[order(cntTheft$cnt,
+                cntTheft$incident_time_of_day <- factor(cntTheft$incident_time_of_day,
+                                                      levels = unique(cntTheft$incident_time_of_day)[order(cntTheft$pct,
                                                                                                          decreasing = TRUE)])
 
                 plot_ly(cntTheft,
-                        y = cntTheft$cnt,
-                        x = cntTheft$incident_value,
+                        y = cntTheft$pct,
+                        x = cntTheft$incident_time_of_day,
                         type = 'bar',
                         color = I('#1287A8')) %>%
-                    layout(title = "Larceny Theft | Incidents by Value",
-                           yaxis = list(title = "Count"),
+                    layout(title = "Percent of Incidents by Time of Day",
+                           yaxis = list(ticksuffix = "%"),
                            margin = list(t = 90,
                                          size = 14),
                            paper_bgcolor = 'transparent',

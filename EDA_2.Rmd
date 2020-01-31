@@ -28,8 +28,14 @@ dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sq
 
 db <- dbConnect(SQLite(), dbname = dbPath)
 
-df <- dbGetQuery(db,  "SELECT *
-                       FROM incident_reports;")
+df <- dbGetQuery(db,  "SELECT 
+                          ir.*
+                          ,ml.min_to_nxt_incident
+                          ,ml.ft_to_nxt_incident
+                          ,ml.min_bw_report
+                       FROM incident_reports ir
+                       JOIN ml_data_incidents ml
+                       ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd;")
 
 dbDisconnect(db)
 
@@ -38,9 +44,6 @@ setDT(df)
 ```
 
 ```{r}
-df <- df[, type := ifelse(vehicle_flag == 1, 'vehicle',
-                          ifelse(weapon_flag == 1, 'weapon', 'other'))]
-
 # Convert the character columns to factors
 convStr <- function(x){
   for(i in length(x)){
@@ -63,7 +66,7 @@ df <- convStr(df)
 
 ```{r}
 set.seed(54321)
-indexes <- createDataPartition(df$type,
+indexes <- createDataPartition(df$incident_time_of_day,
                                times = 1,
                                p = 0.7,
                                list = FALSE)
@@ -85,9 +88,10 @@ train.control <- trainControl(method = "repeatedcv",
 
 
 # Train the model using 10 fold cross validation repeated 3 times
-caret.cv <- train(type ~ incident_day_of_week + police_district + incident_category ,
+caret.cv <- train(incident_time_of_day ~ incident_day_of_week + incident_category +
+                    police_district,
                   data = training,
-                  method = "xgbTree",
+                  method = "rf",
                   trControl = train.control)
 
 ```
@@ -100,6 +104,6 @@ caret.cv
 ```{r}
 prd <- predict(caret.cv, testing)
 
-confusionMatrix(prd, testing$type)
+confusionMatrix(prd, testing$incident_category)
 ```
 
