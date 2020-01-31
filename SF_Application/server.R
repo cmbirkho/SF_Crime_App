@@ -516,43 +516,9 @@ shinyServer(function(input, output, session){
             
             sTest <- shapiro.test(isData()$ft_to_nxt_incident)
             paste("Shapiro Wilk's test: p-value = ", sTest$p.value, ".  Since the p-value is less 
-                  than 0.05 it implies our variable is not normally distributed.")
+                  than 0.05 it confirmsdoes  our variable is not normally distributed.")
         })
         
-        
-        # histogram - transformed for normality
-        output$isHistogramTrans <- renderPlotly({
-            
-            datTrans <- isData()[, ft_to_nxt_incident := log10(ft_to_nxt_incident + 1)]
-            
-            p4 <- ggplot(datTrans,
-                         aes(x = ft_to_nxt_incident)) +
-                geom_histogram(aes(fill = ..count..), bins = 30) +
-                geom_vline(aes(xintercept = mean(ft_to_nxt_incident), 
-                               color = 'mean'),
-                           linetype = 'dashed', size = 1) +
-                geom_vline(aes(xintercept = median(ft_to_nxt_incident), 
-                               color = 'median'),
-                           linetype = 'dashed', size = 1) + 
-                theme(
-                    # panel.background = element_rect(fill = "transparent"), 
-                    plot.background = element_rect(fill = "transparent", color = NA),
-                    panel.grid.major = element_blank(), 
-                    panel.grid.minor = element_blank(), 
-                    legend.background = element_rect(fill = "transparent"), 
-                    legend.box.background = element_rect(fill = "transparent"),
-                    plot.title = element_text(colour = "#ffffff", size = 12, hjust = 0.5),
-                    title = element_text(colour = "#ffffff"),
-                    axis.text = element_text(colour = '#ffffff'),
-                    legend.text = element_text(colour = '#ffffff')) +
-                scale_color_manual(name = '',
-                                   values = c(mean = 'hotpink', median = 'green')) +
-                labs(x = 'Feet', y = 'Frequency', fill = 'Count') +
-                ggtitle("Sample Distribution (log10 + 1)")
-            
-            ggplotly(p4)
-            
-        })
         
         # histogram - sampling distribution 
         output$isHistogramSampling <- renderPlotly({

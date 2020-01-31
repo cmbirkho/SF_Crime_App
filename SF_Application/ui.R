@@ -122,15 +122,8 @@ shinyServer(navbarPage(
                                                             plotlyOutput("isBoxPlot",
                                                                          width = 'auto', height = '600px')),
                                                      
-                                                     br(),
-                                                     
-                                                     h4("The distribution is skewed.")
-                                                     
-                                                 ),
-                                                 
-                                                 fluidRow(
-                                                     
                                                      tags$div(tags$ul(
+                                                         tags$li(tags$span("From the histogram we can see the distribution of distance between incidents does not appear to be normal.")),
                                                          tags$li(tags$span(textOutput("shapiroTest")))
                                                      )),
                                                      
@@ -139,44 +132,19 @@ shinyServer(navbarPage(
                                                      tags$div(tags$ul(
                                                          tags$li(tags$span("Our intention is to complete a t-test to compare the means of
                                                                             the two groups. The t-test is a robust test with the assumption
-                                                                            to normality. This means that some deviation from normality will not 
+                                                                            to normality. Meaning that some deviation from normality will not 
                                                                             have a large impact on our Type 1 error rate. The exception to this 
                                                                             is if the ratio of the smallest to largest group is greater than
                                                                             1.5. Since our data meets this exception we should further validate 
                                                                             that a t-test is appropriate."))
                                                      ))
-                                                     
                                                  ),
-                                                 
-                                                 br(),
+                                              
                                                  br(),
                                                  
                                                  fluidRow(
                                                      
-                                                     h4("Let's perform a log10 + 1 transformation on the data and review its distribution."),
-                                                     
-                                                     column(width = 6, 
-                                                            plotlyOutput("isHistogramTrans",
-                                                                         width = 'auto', height = '600px')),
-                                                     
-                                                     
-                                                     
-                                                 ),
-                                                 
-                                                 fluidRow(
-                                                     
-                                                     tags$div(tags$ul(
-                                                         tags$li(tags$span("After a log transformation the data still is still skewed."))
-                                                     ))
-                                                     
-                                                 ),
-                                                 
-                                                 br(),
-                                                 br(),
-                                                 
-                                                 fluidRow(
-                                                     
-                                                     h4("Let's take a look at a sampling distribution of the data before log transformation."),
+                                                     h4("Let's take a look at a sampling distribution of the data."),
                                                      
                                                      column(width = 6,
                                                             plotlyOutput("isHistogramSampling",
@@ -187,7 +155,9 @@ shinyServer(navbarPage(
                                                  fluidRow(
                                                      
                                                      tags$div(tags$ul(
-                                                         tags$li(tags$span("This suggests that a t-test would be ok with a sample size of 30."))
+                                                         tags$li(tags$span("This suggests that a t-test would be ok with a sample size of 30.")),
+                                                         tags$li(tags$span("Since the sample sizes from both groups are large enough (n > 30) 
+                                                                            we can implement a Welch's Two Sample t-test to account for the non-normal distribution."))
                                                      ))
                                                      
                                                  ),

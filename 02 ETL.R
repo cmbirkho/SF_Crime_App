@@ -114,14 +114,14 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 # Set up incident_reports table
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
-dbExecute(db, "CREATE TABLE ml_data_incidents
-                (incident_id_nbr_cd TEXT NOT NULL,
-                incident_day_of_week TEXT,
-                police_district TEXT,
-                min_to_nxt_incident REAL,
-                ft_to_nxt_incident REAL,
-                min_bw_report,
-                UNIQUE (incident_id_nbr_cd));")
+# dbExecute(db, "CREATE TABLE ml_data_incidents
+#                 (incident_id_nbr_cd TEXT NOT NULL,
+#                 incident_day_of_week TEXT,
+#                 police_district TEXT,
+#                 min_to_nxt_incident REAL,
+#                 ft_to_nxt_incident REAL,
+#                 min_bw_report REAL,
+#                 UNIQUE (incident_id_nbr_cd));")
 #-------------------------------------------------------------------------------
 
 load_data <- function(df) {
