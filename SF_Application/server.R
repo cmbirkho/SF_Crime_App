@@ -11,6 +11,8 @@ library(DBI)
 library(gridExtra)
 library(leaflet)
 library(plotly)
+library(wordcloud2)
+library(tidytext)
 
 
 shinyServer(function(input, output, session){
@@ -119,6 +121,7 @@ shinyServer(function(input, output, session){
         
         sfCrimeData <- dbGetQuery(db, "SELECT 
                                             incident_id_nbr_cd,
+                                            incident_description,
                                             latitude,
                                             longitude,
                                             police_district,
@@ -142,7 +145,8 @@ shinyServer(function(input, output, session){
         
         #-----------------------------------------------------------------------
         # summary statistics tab
-        if(input$overviewTabs == "summaryStats"){
+        if(input$overviewTabs == "summaryStats" |
+           input$overviewTabs == "wordCloud"){
             
             # reactive expression to change data based on inputs
             pctData <- reactive({
@@ -344,8 +348,36 @@ shinyServer(function(input, output, session){
                     width = NULL)
             })
             
-            #-------------------------------------------------------------------
+            # word cloud
+            output$theWordCloud <- renderWordcloud2({
+                
+                df <- pctData()[, "incident_description"]
+                
+                # extract only letters
+                df$incident_description <- gsub("[^a-zA-Z]", " ", df$incident_description)
+                
+                # trim whitespace
+                df$incident_description <- str_trim(df$incident_description, side = 'both')
+                df$incident_description <- str_squish(df$incident_description)
             
+                # create word bag
+                wordBag <- df %>%
+                    select(incident_description) %>%
+                    unnest_tokens(word, incident_description, token = 'words') %>%
+                    count(word, sort = TRUE)
+                
+                # further cleaning of words
+                '%ni%' <- Negate("%in%")
+                wordBag <- subset(wordBag, wordBag$word %ni% c('from',
+                                                               'other',
+                                                               'W'))
+                
+                wordcloud2(wordBag, size = 1.5,
+                           backgroundColor = 'black',
+                           color = 'skyblue')
+            })
+            
+            #-------------------------------------------------------------------
             # interactive map tab
         } else if(input$overviewTabs == 'interactiveMap'){
             
@@ -408,8 +440,10 @@ shinyServer(function(input, output, session){
             
             
             
-        }
+        } 
+        
     })
+    
 #-------------------------------------------------------------------------------
     # observe event for INFERENTIAL STATS tab
     observeEvent(input$navbarPages == "inferentialStats", {

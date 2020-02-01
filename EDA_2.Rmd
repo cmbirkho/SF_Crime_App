@@ -19,7 +19,10 @@ library(tidyverse)
 library(lubridate)
 library(RSQLite)
 library(DBI)
-library(caret)
+library(tm)
+library(tidytext)
+library(wordcloud2)
+library(RColorBrewer)
 ```
 
 
@@ -29,13 +32,9 @@ dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sq
 db <- dbConnect(SQLite(), dbname = dbPath)
 
 df <- dbGetQuery(db,  "SELECT 
-                          ir.*
-                          ,ml.min_to_nxt_incident
-                          ,ml.ft_to_nxt_incident
-                          ,ml.min_bw_report
-                       FROM incident_reports ir
-                       JOIN ml_data_incidents ml
-                       ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd;")
+                          incident_id_nbr_cd
+                          ,incident_description
+                       FROM incident_reports;;")
 
 dbDisconnect(db)
 
@@ -43,67 +42,56 @@ setDT(df)
 
 ```
 
+#### Text Cleaning
 ```{r}
-# Convert the character columns to factors
-convStr <- function(x){
-  for(i in length(x)){
-    catVar <- select_if(x, is.character)
-    catVar <- lapply(catVar, as.factor)
-    catVar <- as.data.frame(catVar)
-    
-    numVar <- select_if(x, is.numeric)
-    numVar <- lapply(numVar, as.numeric)
-    numVar <- as.data.frame(numVar)
-    
-    final <- cbind(catVar, numVar)
-    return(final)
-  }
-}
+# extract only letters
+df$incident_description <- gsub("[^a-zA-Z]", " ", df$incident_description)
 
-df <- convStr(df)
+# trim whitespace
+df$incident_description <- str_trim(df$incident_description, side = 'both')
+df$incident_description <- str_squish(df$incident_description)
 
-```
-
-```{r}
-set.seed(54321)
-indexes <- createDataPartition(df$incident_time_of_day,
-                               times = 1,
-                               p = 0.7,
-                               list = FALSE)
-
-training <- df[indexes,]
-testing <- df[- indexes,]
-
-```
-
-```{r}
-# Use 10 fold cross validation (trainControl)
-# In short, build 10 models and evaluate how good they are on the data
-# Repeat it 3 times (30 models)
-# Complete a grid search
-train.control <- trainControl(method = "repeatedcv",
-                              number = 10,
-                              repeats = 3,
-                              search = "grid")
-
-
-# Train the model using 10 fold cross validation repeated 3 times
-caret.cv <- train(incident_time_of_day ~ incident_day_of_week + incident_category +
-                    police_district,
-                  data = training,
-                  method = "rf",
-                  trControl = train.control)
+#
+df$incident_description <- removeWords(df$incident_description, tm::stopwords("english"))
 
 ```
 
 
+#### Tokenize
 ```{r}
-caret.cv
+wordBag <- df %>%
+  select(incident_description) %>%
+  unnest_tokens(word, incident_description, token = 'words') %>%
+  count(word, sort = TRUE)
+
 ```
 
 ```{r}
-prd <- predict(caret.cv, testing)
-
-confusionMatrix(prd, testing$incident_category)
+'%ni%' <- Negate("%in%")
+wordBag <- subset(wordBag, wordBag$word %ni% c('from',
+                                               'other',
+                                               'W'))
 ```
+
+
+#### 
+```{r}
+
+wordcloud(words = wordBag$word, freq = wordBag$n, 
+          min.freq = 1,
+          max.words = 200,
+          random.order = FALSE,
+          rot.per = 0.5,
+          colors = brewer.pal(8, "Dark2"))
+
+
+wordcloud2(wordBag, size = 1.6)
+
+
+```
+
+
+
+
+
 

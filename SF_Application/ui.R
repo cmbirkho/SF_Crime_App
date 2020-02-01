@@ -5,6 +5,7 @@ library(shinydashboard)
 library(DT)
 library(leaflet)
 library(plotly)
+library(wordcloud2)
 
 shinyServer(navbarPage(
     
@@ -59,20 +60,19 @@ shinyServer(navbarPage(
                                           
                                  ),
                                  
+                                 tabPanel(title = 'Word Cloud', value = 'wordCloud',
+                                          
+                                          wordcloud2Output("theWordCloud", height = '500px', width = '1000px')
+                                          
+                                 ),
+                                 
                                  tabPanel(title = "Interactive Map", value = 'interactiveMap',
                                           
-                                          leafletOutput("overviewMap", height = 1000, width = 1500),
-                                          
-                                          absolutePanel(id = 'controls', class = "panel panel-default",
-                                                        fixed = TRUE, draggable = TRUE, top = 'auto',
-                                                        left = 555, right = 'auto', bottom = 'auto',
-                                                        width = 400, height = 'auto',
-                                                        
-                                                        plotOutput("barChartMap", height = 400)
-                                          )
+                                          leafletOutput("overviewMap", height = 1000, width = 1000),
                                           
                                           
                                  )
+                                 
                      )
                  )
              )
@@ -219,37 +219,37 @@ shinyServer(navbarPage(
              
     ),
     
-    tabPanel("Machine Learning", value = "machineLearning",
-             
-             h4(""),
-             
-             br(),
-             
-             sidebarLayout(
-                 
-                 sidebarPanel(width = 3,
-                              
-                              
-                 ),
-                 
-                 mainPanel(
-                     
-                     tabsetPanel(
-                         
-                         tabPanel("Results",
-                                  
-                         ),
-                         
-                         tabPanel("Model Validation",
-                                  
-                                  
-                         )
-                     )
-                     
-                 )
-             )
-             
-    ),
+    # tabPanel("Machine Learning", value = "machineLearning",
+    #          
+    #          h4(""),
+    #          
+    #          br(),
+    #          
+    #          sidebarLayout(
+    #              
+    #              sidebarPanel(width = 3,
+    #                           
+    #                           
+    #              ),
+    #              
+    #              mainPanel(
+    #                  
+    #                  tabsetPanel(
+    #                      
+    #                      tabPanel("Results",
+    #                               
+    #                      ),
+    #                      
+    #                      tabPanel("Model Validation",
+    #                               
+    #                               
+    #                      )
+    #                  )
+    #                  
+    #              )
+    #          )
+    #          
+    # ),
     
     tabPanel(title = "Data Download", value = 'dataExplorer',
              
