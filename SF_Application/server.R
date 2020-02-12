@@ -554,7 +554,7 @@ shinyServer(function(input, output, session){
             
             sTest <- shapiro.test(isData()$ft_to_nxt_incident)
             paste("Shapiro Wilk's test: p-value = ", sTest$p.value, ".  Since the p-value is less 
-                  than 0.05 it confirmsdoes  our variable is not normally distributed.")
+                  than 0.05 it confirms our variable is not normally distributed.")
         })
         
         

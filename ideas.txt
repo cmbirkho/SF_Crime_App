@@ -44,3 +44,11 @@ on Summary Stats tab if incident_cnt = 0, do nothing and print out a messsage
 
 
 Do a classification machine learning problem. Determining if the crime 
+
+Predict the next word to be written in the report
+
+Make a new variable of officers on duty by using some logic. Probably need to transform the whole table 
+-officers on duty at time of incident
+    - min_to_nxt_incident
+        - if there's not enough time/distance to get to the next incident within that district then you need another set of officers on duty
+* then you could aggregate the table and predict how many officers are on duty by day of week, time of day, police district, mean min to nxt incident, mean ft to nxt incident

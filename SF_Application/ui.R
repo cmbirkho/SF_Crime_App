@@ -6,6 +6,7 @@ library(DT)
 library(leaflet)
 library(plotly)
 library(wordcloud2)
+library(shinycssloaders)
 
 shinyServer(navbarPage(
     
@@ -43,18 +44,18 @@ shinyServer(navbarPage(
                                           br(),
                                           
                                           fluidRow(
-                                              column(width = 6, plotlyOutput("ui_pctDistrictChart",
-                                                                             width = "auto", height = "auto")),
-                                              column(width = 6, plotlyOutput("ui_pctDayofweek",
-                                                                             width = "auto", height = "auto"))
+                                              column(width = 6, withSpinner(plotlyOutput("ui_pctDistrictChart",
+                                                                             width = "auto", height = "auto"))),
+                                              column(width = 6, withSpinner(plotlyOutput("ui_pctDayofweek",
+                                                                             width = "auto", height = "auto")))
                                           ),
                                           br(),
                                           
                                           fluidRow(
-                                              column(width = 6, plotlyOutput("ui_incidentCat",
-                                                                             width = "auto", height = "auto")),
-                                              column(width = 6, plotlyOutput("ui_theftValue",
-                                                                             width = "auto", height = "auto"))
+                                              column(width = 6, withSpinner(plotlyOutput("ui_incidentCat",
+                                                                             width = "auto", height = "auto"))),
+                                              column(width = 6, withSpinner(plotlyOutput("ui_theftValue",
+                                                                             width = "auto", height = "auto")))
                                           )
                                           
                                           
@@ -251,7 +252,7 @@ shinyServer(navbarPage(
     #          
     # ),
     
-    tabPanel(title = "Data Download", value = 'dataExplorer',
+    tabPanel(title = "Data", value = 'dataExplorer',
              
              fluidRow(
                  column(width = 12, downloadButton("downloadData", "Download"))
