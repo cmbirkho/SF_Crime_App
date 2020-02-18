@@ -5,7 +5,7 @@ date: "2/12/2020"
 output: html_document
 ---
 ### **Multiclass Text Classification**
-#### **Use machine learning to predict the incident_category using just the language filled out in the incident_description**
+#### **Use machine learning to predict the incident_category using the language filled out in the incident_description**
 
 #### The Process
 1. 
@@ -27,7 +27,6 @@ library(caret)
 
 library(stopwords)
 library(tm)
-library(lexicon)
 ```
 
 
@@ -59,27 +58,42 @@ ggplot(df, aes(incident_category, cnt)) +
 
 ```
 
-#### **Remove Incident Categories with only 1 incident**
+#### **Remove Incident Categories with less than 3 incident**
 ```{r}
 filt <- df[, .(sum = sum(cnt)),
            by = incident_category] %>% 
-    .[sum <= 1,]
+    .[sum >= 3,]
 
-"%ni%" <- Negate("%in%")
-
-df <- df[incident_category %ni% filt$incident_category, ]
+df <- df[incident_category %in% filt$incident_category, ]
 ```
 
+```{r}
+set.seed(54321)
+indexes <- createDataPartition(df$incident_category,
+                               times = 1,
+                               p = 0.7,
+                               list = FALSE)
+
+training <- df[indexes,]
+testing <- df[- indexes,]
+```
 
 #### **Make a Corpus**
 ```{r}
-# make a corpus
-test <- df %>% rename(doc_id = incident_id_nbr_cd,
+# rename
+training <- df %>% rename(doc_id = incident_id_nbr_cd,
                       text = incident_description)
 
-dfSource <- DataframeSource(test)
+testing <- df %>% rename(doc_id = incident_id_nbr_cd,
+                      text = incident_description)
+# data frame source
+trainSource <- DataframeSource(training)
 
-dfCorpus <- VCorpus(dfSource)
+testSource <- DataframeSource(testing)
+# create corpus
+trainCorpus <- VCorpus(trainSource)
+
+testCorpus <- VCorpus(testSource)
 ```
 
 #### **Text Cleaning**
@@ -101,7 +115,9 @@ clean.Text <- function(corpus){
     return(corpus)
 }
 
-dfCorpus <- clean.Text(dfCorpus)
+trainCorpus <- clean.Text(trainCorpus)
+
+testCorpus <- clean.Text(testCorpus)
 
 ```
 
@@ -121,21 +137,12 @@ word.Bag <- function(corpus, data){
     return(dfNew)
 }
 
-dfNew <- word.Bag(dfCorpus, df)
+trainNew <- word.Bag(trainCorpus, training)
 
+testNew <- word.Bag(testCorpus, testing)
 
 ```
 
-```{r}
-set.seed(54321)
-indexes <- createDataPartition(dfNew$incident_category,
-                               times = 1,
-                               p = 0.7,
-                               list = FALSE)
-
-training <- dfNew[indexes,]
-testing <- dfNew[- indexes,]
-```
 
 ```{r}
 train.control <- trainControl(method = "repeatedcv",
@@ -144,14 +151,16 @@ train.control <- trainControl(method = "repeatedcv",
                               search = "grid")
 
 caret.cv <- train(incident_category ~ .,
-                  data = training,
-                  method = "rf",
-                  trControl = train.control)
+                  data = trainNew,
+                  trControl = train.control,
+                  method = "rf")
 ```
 
+#### **Results**
+* Either the model is overfit (most incidents are "Larceny Theft") or incident descriptions are a very reliable source of classifying the category which makes sense
 ```{r}
-pred <- predict(caret.cv, testing)
+pred <- predict(caret.cv, testNew)
 
-confusionMatrix(testing$incident_category, pred)
+confusionMatrix(testNew$incident_category, pred)$overall
 ```
 

@@ -59,3 +59,8 @@ Make a new variable of officers on duty by using some logic. Probably need to tr
     - How does the user interact with this?
         - the user could do an ad lib deal. Select from various inputs to describe a crime and then the machine would label that crime
     - Does the user need to interact or is it more of a write-up?
+    - User interaction tab + validation/write up tab
+        - submit an incident description and the algo will classify that crime accordingly
+        * could have a has to start with list to select from and end with and then you can enter what you want in the the middle
+    - data flow
+        - condense the bag of words model into 4 columns send to db -> pull and spread bag of words data and train model

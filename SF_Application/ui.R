@@ -79,7 +79,7 @@ shinyServer(navbarPage(
              )
     ),
     
-    tabPanel("Inferential Stats", value = "inferentialStats",
+    tabPanel("Inference", value = "inferentialStats",
              
              fluidRow(
                  
@@ -141,14 +141,19 @@ shinyServer(navbarPage(
                                                      ))
                                                  ),
                                               
-                                                 br(),
+                                                 hr(),
                                                  
                                                  fluidRow(
                                                      
                                                      h4("Let's take a look at a sampling distribution of the data."),
                                                      
+                                                     br(),
+                                                     
                                                      column(width = 6,
-                                                            plotlyOutput("isHistogramSampling",
+                                                            plotlyOutput("FridayisHistogramSampling",
+                                                                         width = 'auto', height = '600px')),
+                                                     column(width = 6,
+                                                            plotlyOutput("WednesdayisHistogramSampling",
                                                                          width = 'auto', height = '600px'))
                                                      
                                                  ),
@@ -158,7 +163,7 @@ shinyServer(navbarPage(
                                                      tags$div(tags$ul(
                                                          tags$li(tags$span("This suggests that a t-test would be ok with a sample size of 30.")),
                                                          tags$li(tags$span("Since the sample sizes from both groups are large enough (n > 30) 
-                                                                            we can implement a Welch's Two Sample t-test to account for the non-normal distribution."))
+                                                                            we can implement a Welch's Two Sample t-test to account for the sample's non-normal distribution."))
                                                      ))
                                                      
                                                  ),
@@ -172,8 +177,7 @@ shinyServer(navbarPage(
                                                  br(),
                                                  
                                                  fluidRow(
-                                                     
-                                                     h4("To test our hypothesis we will use a Welch's Two Sample t-test."),
+    
                                                      br(),
                                                      h4("T-Test Metrics: "),
                                                      column(width = 4, valueBoxOutput("isTpvalue")),
@@ -190,7 +194,7 @@ shinyServer(navbarPage(
                                                      
                                                  ),
                                                  
-                                                 br(),
+                                                 hr(),
                                                  
                                                  fluidRow(
                                                      h4("Conclusions:"),
@@ -220,37 +224,43 @@ shinyServer(navbarPage(
              
     ),
     
-    # tabPanel("Machine Learning", value = "machineLearning",
-    #          
-    #          h4(""),
-    #          
-    #          br(),
-    #          
-    #          sidebarLayout(
-    #              
-    #              sidebarPanel(width = 3,
-    #                           
-    #                           
-    #              ),
-    #              
-    #              mainPanel(
-    #                  
-    #                  tabsetPanel(
-    #                      
-    #                      tabPanel("Results",
-    #                               
-    #                      ),
-    #                      
-    #                      tabPanel("Model Validation",
-    #                               
-    #                               
-    #                      )
-    #                  )
-    #                  
-    #              )
-    #          )
-    #          
-    # ),
+    tabPanel("Classification", value = "machineLearning",
+
+             h3("Can we use text data to create a tool that classifies crimes based on their description?"),
+             br(),
+             tags$div(tags$ul(
+                 tags$li(tags$span("Extracted text from `incident_description`")),
+                 tags$li(tags$span("test"))
+             )),
+             
+             br(),
+             
+             tabsetPanel(
+                 
+                 tabPanel("Data Overview",
+                          
+                       
+                 ),
+                 
+                 tabPanel("Classifier Tool",
+                          
+                          br(),
+                          
+                          fluidRow(
+                              column(width = 12, h4("Describe the crime using the dropdown and description boxes:"))
+                          ),
+                          
+                          fluidRow(
+                              column(width = 3, uiOutput("top10wordsList")),
+                              column(width = 3, uiOutput("top20wordsList")),
+                              column(width = 6, textInput("classTextInput",
+                                                          label = "Text Input:",
+                                                          value = "Enter text..."))
+                          )
+                 )
+             )
+             
+    ),
     
     tabPanel(title = "Data", value = 'dataExplorer',
              

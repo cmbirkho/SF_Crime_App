@@ -558,10 +558,10 @@ shinyServer(function(input, output, session){
         })
         
         
-        # histogram - sampling distribution 
-        output$isHistogramSampling <- renderPlotly({
-
-            x <- isData()$ft_to_nxt_incident
+        # histogram - Friday sampling distribution 
+        output$FridayisHistogramSampling <- renderPlotly({
+            x <- isData()[incident_day_of_week == 'Friday',]
+            x <- x$ft_to_nxt_incident
             nbrSamples <- 1000
             sampleMeans <- rep(NA, nbrSamples)
 
@@ -595,10 +595,53 @@ shinyServer(function(input, output, session){
                 scale_color_manual(name = '',
                                    values = c(mean = 'hotpink', median = 'green')) +
                 labs(x = 'Feet', y = 'Frequency', fill = 'Count',
-                     title = "Distribution of Sample Mean (n = 30)")
+                     title = "Friday | Distribution of Sample Mean (n = 30)")
 
             ggplotly(p3)
 
+        })
+        
+        # histogram - Wednesday sampling distribution 
+        output$WednesdayisHistogramSampling <- renderPlotly({
+            x <- isData()[incident_day_of_week == 'Wednesday',]
+            x <- x$ft_to_nxt_incident
+            nbrSamples <- 1000
+            sampleMeans <- rep(NA, nbrSamples)
+            
+            for (i in 1:nbrSamples) {
+                sample <- sample(x, size = 30, replace = TRUE)
+                sampleMeans[i] <- mean(sample)
+            }
+            
+            sampleMeans <- as.data.frame(sampleMeans)
+            names(sampleMeans) <- "mu"
+            
+            p3 <- ggplot(sampleMeans,
+                         aes(x = mu)) +
+                geom_histogram(aes(fill = ..count..), bins = 30) +
+                geom_vline(aes(xintercept = mean(mu), color = 'mean'),
+                           linetype = 'dashed', size = 1) +
+                geom_vline(aes(xintercept = median(mu), color = 'median'),
+                           linetype = 'dashed', size = 1) +
+                theme(
+                    # panel.background = element_rect(fill = "transparent"),
+                    plot.background = element_rect(fill = "transparent", color = NA),
+                    panel.grid.major = element_blank(),
+                    panel.grid.minor = element_blank(),
+                    legend.background = element_rect(fill = "transparent"),
+                    legend.box.background = element_rect(fill = "transparent"),
+                    plot.title = element_text(colour = "#ffffff", size = 12, hjust = 0.5),
+                    plot.subtitle = element_text(colour = "#ffffff", size = 8, hjust = 0.5),
+                    title = element_text(colour = "#ffffff"),
+                    axis.text = element_text(colour = '#ffffff'),
+                    legend.text = element_text(colour = '#ffffff')) +
+                scale_color_manual(name = '',
+                                   values = c(mean = 'hotpink', median = 'green')) +
+                labs(x = 'Feet', y = 'Frequency', fill = 'Count',
+                     title = "Wednesday | Distribution of Sample Mean (n = 30)")
+            
+            ggplotly(p3)
+            
         })
         
         # t-test
@@ -665,55 +708,73 @@ shinyServer(function(input, output, session){
     # observe event for MACHINE LEARNING tab
     observeEvent(input$navbarPages == "machineLearning", {
         
-        # create districtList for select inputs
-        mlDistrictList <- reactive({
-            
+        #-----------------------------------------------------------------------
+        # visuals & metrics about the text used in report description
+        
+        
+        
+        
+        
+        
+        
+        #-----------------------------------------------------------------------
+        # load the model
+        load("./RandomForestClassifyer.rda")
+        
+        
+        # get top 20 words
+        topWords <- reactive({
             dbPath <- "./sf_crime_db.sqlite"
             db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
             
-            mlDistrictList <- dbGetQuery(db,  "SELECT
-                                                distinct(police_district)
-                                            FROM incident_reports
-                                            ORDER BY police_district;")
+            topWords <- dbGetQuery(db,  "SELECT
+                                                    variable
+                                                    ,sum(value) as cnt
+                                            FROM bag_of_words
+                                            GROUP BY variable
+                                            ORDER BY cnt DESC
+                                            LIMIT 20;")
             
             dbDisconnect(db)
             
-            mlDistrictList <- mlDistrictList$police_district
-            mlDistrictList
+            topWords
         })
         
-        # ui output for districtList
-        output$ml_ui_districtList <- renderUI({
-            selectInput("ml_pick_district",
-                        label = "Police District:",
-                        choices = c(mlDistrictList()),
+        
+        # Top 10 most frequent words
+        top10words <- reactive({
+            
+            top10words <- topWords()[1:10, ]
+            
+            top10words$variable
+        })
+        
+       
+        output$top10wordsList <- renderUI({
+            selectInput("pick_first_word",
+                        label = "Input 1:",
+                        choices = top10words(),
                         selected = NULL, multiple = FALSE)
         })
         
-        # create dayOfWeekList for select inputs
-        mlDayOfweekList <- reactive({
+        # Top 11-20 most frequent words
+        top20words <- reactive({
             
-            dbPath <- "./sf_crime_db.sqlite"
-            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            top20words <- topWords()[11:20, ]
             
-            mlDayOfweekList <- dbGetQuery(db,  "SELECT
-                                                distinct(incident_day_of_week)
-                                            FROM incident_reports
-                                            ORDER BY police_district;")
+            top20words$variable
             
-            dbDisconnect(db)
-            
-            mlDayOfweekList <- mlDayOfweekList$incident_day_of_week
-            mlDayOfweekList
         })
         
-        # ui output for districtList
-        output$ml_ui_dayOfweekList <- renderUI({
-            selectInput("ml_day_of_week",
-                        label = "Day of week:",
-                        choices = c(mlDayOfweekList()),
+        output$top20wordsList <- renderUI({
+            selectInput("pick_second_word",
+                        label = "Input 2:",
+                        choices = top20words(),
                         selected = NULL, multiple = FALSE)
         })
+        
+        
+        # Prediction output
         
     })
     
