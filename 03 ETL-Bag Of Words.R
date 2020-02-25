@@ -5,6 +5,7 @@ library(tidyverse)
 library(lubridate)
 library(RSQLite)
 library(DBI)
+library(caret)
 library(stopwords)
 library(tm)
 
@@ -76,12 +77,12 @@ train.control <- trainControl(method = "repeatedcv",
                               repeats = 3,
                               search = "grid")
 
-rf_classifyer <- train(incident_category ~ .,
+rf_classifier <- train(incident_category ~ .,
                   data = dfNew,
                   trControl = train.control,
                   method = "rf")
 
-save(rf_classifyer, file = "./SF_Application/RandomForestClassifyer.rda")
+save(rf_classifier, file = "./SF_Application/RandomForestClassifier.rda")
 
 #===============================================================================
 # Formatting for sqlite

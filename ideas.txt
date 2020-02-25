@@ -64,3 +64,6 @@ Make a new variable of officers on duty by using some logic. Probably need to tr
         * could have a has to start with list to select from and end with and then you can enter what you want in the the middle
     - data flow
         - condense the bag of words model into 4 columns send to db -> pull and spread bag of words data and train model
+        
+        
+* if the words the user inputs are in the bag of words data then select just those words and predict off of that subset of the users inputs

@@ -18,10 +18,6 @@ library(tidytext)
 shinyServer(function(input, output, session){
     
 #-------------------------------------------------------------------------------
-# this section of server code is reserved for non observeEvent code
-    
-    
-#-------------------------------------------------------------------------------
     # observe event expression for OVERVIEW TABS
     observeEvent(input$overviewTabs, {
         
@@ -144,7 +140,7 @@ shinyServer(function(input, output, session){
                                                         format = "%Y-%m-%d %H:%M:%S"))]
         
         #-----------------------------------------------------------------------
-        # summary statistics tab
+        # Summary Stats and Word Cloud tab
         if(input$overviewTabs == "summaryStats" |
            input$overviewTabs == "wordCloud"){
             
@@ -708,20 +704,6 @@ shinyServer(function(input, output, session){
     # observe event for MACHINE LEARNING tab
     observeEvent(input$navbarPages == "machineLearning", {
         
-        #-----------------------------------------------------------------------
-        # visuals & metrics about the text used in report description
-        
-        
-        
-        
-        
-        
-        
-        #-----------------------------------------------------------------------
-        # load the model
-        load("./RandomForestClassifyer.rda")
-        
-        
         # get top 20 words
         topWords <- reactive({
             dbPath <- "./sf_crime_db.sqlite"
@@ -737,8 +719,47 @@ shinyServer(function(input, output, session){
             
             dbDisconnect(db)
             
+            setDT(topWords)
+            
             topWords
         })
+        
+        
+        #-----------------------------------------------------------------------
+        # Data Overview tab
+        
+        # top 20 words barchart
+        # output$ui_top20barchart <- renderPlotly({
+        #     
+        #     
+        #     tw <- topWords()[order(-rank(cnt)),]
+        #     
+        #     tw$variable <- factor(tw$variable,
+        #                           levels = unique(tw$variable)[order(tw$cnt,
+        #                                                              decreasing = FALSE)])
+        #     
+        #     plot_ly(x = tw$cnt,
+        #             y = tw$variable,
+        #             type = 'bar',
+        #             orientation = 'h',
+        #             color = I('#1287A8')) %>%
+        #         layout(title = "Top 20 Words",
+        #                xaxis = list(title = "Count"),
+        #                margin = list(t = 90,
+        #                              size = 14),
+        #                paper_bgcolor = 'transparent',
+        #                plot_bgcolor = 'transparent',
+        #                font = list(color = '#ffffff'))
+        # })
+        # 
+        
+        
+        
+        
+        
+        #-----------------------------------------------------------------------
+        # Classifier Tool tab
+        load("RandomForestClassifier.rda", .GlobalEnv)
         
         
         # Top 10 most frequent words
@@ -775,6 +796,9 @@ shinyServer(function(input, output, session){
         
         
         # Prediction output
+        output$predictedClass <- reactive({
+            input$pick_first_word <- 1
+        })
         
     })
     

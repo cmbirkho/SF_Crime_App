@@ -16,6 +16,8 @@ shinyServer(navbarPage(
     
     tabPanel("Overview",
              
+             tags$head(includeHTML("google-analytics.html")),
+             
              sidebarLayout(
                  
                  sidebarPanel(width = 3,
@@ -86,9 +88,10 @@ shinyServer(navbarPage(
                  column(width = 8, 
                         h3("Does the frequency of incidents impact the distance between them?"),
                         br(),
+                        h4("We will test this by comparing days with a high count of incidents and days with a low count of incidents."),
                         h4("Hypothesis: The more incidents there are the shorter the distance between them."),
-                        h5("HO: The mean under Friday is equal to or greater than the mean under Wednesday."),
-                        h5("HA: The mean under Friday is less than the mean under Wednesday."),
+                        h5("HO: The frequency of incidents does NOT impact the distance between them."),
+                        h5("HA: The frequency of incidents does impact the distance between them."),
                         br(),
                         tags$div(tags$ul(
                             tags$li(tags$span("~35% of incidents occur on Friday and ~10% of incidents occur on Wednesday.")),
@@ -204,8 +207,8 @@ shinyServer(navbarPage(
                                                          tags$li(tags$span("The p-value is saying that assuming the incident count (aka day of week) has no effect, you'd 
                                                                            obtain the observed difference or more in 74% of studies due to random sampling error.")),
                                                          tags$li(tags$span("Further supporting the lack of evidence against the null hypothesis the confidence interval contains zero.")),
-                                                         tags$li(tags$span("Based on these results we can infer that the number of incidents
-                                                                            does not have a statistically significant effect on mean distance between them. 
+                                                         tags$li(tags$span("Based on these results we can infer that the frequency of incidents
+                                                                            is not a statistically significant determinent of the average distance between incidents.
                                                                             Thus we fail to reject the null hypothesis.")),
                                                          tags$li(tags$span("Applying these findings to real life we can infer that on days when incident counts
                                                                             are high officers will still be traveling the same distance between incidents and thus
@@ -237,10 +240,13 @@ shinyServer(navbarPage(
              
              tabsetPanel(
                  
-                 tabPanel("Data Overview",
-                          
-                       
-                 ),
+                 # tabPanel("Data Overview",
+                 #          
+                 #          fluidRow(
+                 #              column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
+                 #                                                         width = "auto", height = "auto")))
+                 #          )
+                 # ),
                  
                  tabPanel("Classifier Tool",
                           
