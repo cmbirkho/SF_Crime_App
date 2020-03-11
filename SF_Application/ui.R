@@ -227,46 +227,46 @@ shinyServer(navbarPage(
              
     ),
     
-    tabPanel("Classification", value = "machineLearning",
-
-             h3("Can we use text data to create a tool that classifies crimes based on their description?"),
-             br(),
-             tags$div(tags$ul(
-                 tags$li(tags$span("Extracted text from `incident_description`")),
-                 tags$li(tags$span("test"))
-             )),
-             
-             br(),
-             
-             tabsetPanel(
-                 
-                 # tabPanel("Data Overview",
-                 #          
-                 #          fluidRow(
-                 #              column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
-                 #                                                         width = "auto", height = "auto")))
-                 #          )
-                 # ),
-                 
-                 tabPanel("Classifier Tool",
-                          
-                          br(),
-                          
-                          fluidRow(
-                              column(width = 12, h4("Describe the crime using the dropdown and description boxes:"))
-                          ),
-                          
-                          fluidRow(
-                              column(width = 3, uiOutput("top10wordsList")),
-                              column(width = 3, uiOutput("top20wordsList")),
-                              column(width = 6, textInput("classTextInput",
-                                                          label = "Text Input:",
-                                                          value = "Enter text..."))
-                          )
-                 )
-             )
-             
-    ),
+    # tabPanel("Classification", value = "machineLearning",
+    # 
+    #          h3("Can we use text data to create a tool that classifies crimes based on their description?"),
+    #          br(),
+    #          tags$div(tags$ul(
+    #              tags$li(tags$span("Extracted text from `incident_description`")),
+    #              tags$li(tags$span("test"))
+    #          )),
+    #          
+    #          br(),
+    #          
+    #          tabsetPanel(
+    #              
+    #              # tabPanel("Data Overview",
+    #              #          
+    #              #          fluidRow(
+    #              #              column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
+    #              #                                                         width = "auto", height = "auto")))
+    #              #          )
+    #              # ),
+    #              
+    #              tabPanel("Classifier Tool",
+    #                       
+    #                       br(),
+    #                       
+    #                       fluidRow(
+    #                           column(width = 12, h4("Describe the crime using the dropdown and description boxes:"))
+    #                       ),
+    #                       
+    #                       fluidRow(
+    #                           column(width = 3, uiOutput("top10wordsList")),
+    #                           column(width = 3, uiOutput("top20wordsList")),
+    #                           column(width = 6, textInput("classTextInput",
+    #                                                       label = "Text Input:",
+    #                                                       value = "Enter text..."))
+    #                       )
+    #              )
+    #          )
+    #          
+    # ),
     
     tabPanel(title = "Data", value = 'dataExplorer',
              
@@ -337,9 +337,18 @@ shinyServer(navbarPage(
              fluidRow(
                  
                  column(width = 6,
+                        helpText("For documentation and code:", a("click here",
+                                                                  href = "https://github.com/cmbirkho/SF_Crime_App")))
+             ),
+             
+             br(),
+             
+             fluidRow(
+                 
+                 column(width = 6,
                         h5("Due to inconsistencies in the data, a sample of the data from the above source was used for this project. 
                             The data was filtered to incident reports during the week of 2019-09-29 to 2019-10-05. 
                             Which accounts for ~60% percent of the incident reports from this source at the time the data was collected."))
-             ),
+             )
     )
 ))
