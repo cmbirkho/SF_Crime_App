@@ -13,6 +13,9 @@ library(leaflet)
 library(plotly)
 library(wordcloud2)
 library(tidytext)
+library(stopwords)
+library(tm)
+library(caret)
 
 
 shinyServer(function(input, output, session){
@@ -710,18 +713,32 @@ shinyServer(function(input, output, session){
             db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
             
             topWords <- dbGetQuery(db,  "SELECT
-                                                    variable
-                                                    ,sum(value) as cnt
-                                            FROM bag_of_words
-                                            GROUP BY variable
-                                            ORDER BY cnt DESC
-                                            LIMIT 20;")
+                                            variable
+                                            ,sum(value) as cnt
+                                         FROM bag_of_words
+                                         GROUP BY variable
+                                         ORDER BY cnt DESC
+                                         LIMIT 20;")
             
             dbDisconnect(db)
             
             setDT(topWords)
             
             topWords
+        })
+        
+        allWords <- reactive({
+            dbPath <- "./sf_crime_db.sqlite"
+            db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+            
+            allWords <- dbGetQuery(db,  "SELECT *
+                                         FROM bag_of_words;")
+            
+            dbDisconnect(db)
+            
+            setDT(allWords)
+            
+            allWords
         })
         
         
@@ -759,9 +776,8 @@ shinyServer(function(input, output, session){
         
         #-----------------------------------------------------------------------
         # Classifier Tool tab
-        load("RandomForestClassifier.rda", .GlobalEnv)
         
-        
+        # Inputs for prediction
         # Top 10 most frequent words
         top10words <- reactive({
             
@@ -795,9 +811,89 @@ shinyServer(function(input, output, session){
         })
         
         
-        # Prediction output
+        
+        #-----------------------------------------------------------------------
+        # Prediction
         output$predictedClass <- reactive({
-            input$pick_first_word <- 1
+            
+            # Make a dataframe of the inputs
+            descDf <- as.data.frame(c(input$pick_first_word,
+                                      input$pick_second_word,
+                                      input$classTextInput))
+            names(descDf) <- "text"
+            descDf$doc_id <- c(1, 2, 3)
+            
+            # make into corpus, clean, and make a word bag
+            dfSource <- DataframeSource(descDf)
+            
+            dfCorpus <- VCorpus(dfSource)
+            
+            clean.Text <- function(corpus){
+                
+                corpus <- tm_map(corpus, content_transformer(removePunctuation))
+                corpus <- tm_map(corpus, content_transformer(tolower))
+                corpus <- tm_map(corpus, removeNumbers)
+                corpus <- tm_map(corpus, content_transformer(removeWords), 
+                                 stopwords("english"))
+                # corpus <- tm_map(corpus, stemDocument)
+                corpus <- tm_map(corpus, stripWhitespace)
+                
+                return(corpus)
+            }
+            
+            dfCorpus <- clean.Text(dfCorpus)
+            
+            word.Bag <- function(corpus, data){
+                
+                docMatrix <- DocumentTermMatrix(corpus)
+                dfMatrix <- as.matrix(docMatrix)
+                dfNew <- as.data.frame(dfMatrix)
+                
+                return(dfNew)
+            }
+            
+            dfNew <- word.Bag(dfCorpus, df)
+            
+            # melt
+            setDT(dfNew)
+            dfNew <- melt(dfNew)
+            
+            # spread
+            dfNew <- unique(dfNew)
+            dfNew <- dcast(dfNew, . ~ variable, fun.aggregate = sum)
+            dfNew <- as.data.frame(lapply(dfNew, as.factor))
+            setDT(dfNew)
+            
+            # check if any of the input words are used in the word bag data
+            # if they are then keep them if not then filter them out
+            # create dfNew which will be used for prediction
+            wordList <- names(dfNew)
+            filtList <- vector()
+            for(i in 1:length(wordList)){
+                if(wordList[i] %in% allWords()$variable){
+                    filtList <- rbind(filtList, wordList[i])
+                }
+            }
+
+            setDT(dfNew)
+            dfNew <- dfNew[, filtList, with = FALSE]
+            
+            # filter the training data to only words used in filtList
+            trainData <- allWords()[variable %in% filtList, ]
+            trainData <- unique(trainData)
+            trainData <- dcast(trainData, incident_category ~ variable,
+                               fun.aggregate = sum)
+            trainData <- as.data.frame(lapply(trainData, as.factor))
+            setDT(trainData)
+            datatable(trainData)
+            
+            # train a model based on that data
+            rf_classifier <- train(incident_category ~ .,
+                                   data = trainData,
+                                   method = "rpart")
+
+            # make a prediction for dfNew
+            predict(rf_classifier, dfNew)
         })
         
     })

@@ -5,15 +5,14 @@
 - San Francisco crime data is downloaded and Extract, Transform, and Load operations are performed and the data is stored in a SQLite database.
 - The user can interact with the data in several ways by exploring each of the following tabs on the UI:
     - Overview
-    - Inferential Stats
-    - Machine Learning
-    - Data Download
+    - Inference
+    - Data
     - About
 
 #### **Where does the data come from?**
 - Police Department Incident Reports: 2018 to Present. For more information go [**here.**](https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783)
 
-### **Where can I find the app?**
+#### **Where can I find the app?**
 - [**here**](https://cmbirkho.shinyapps.io/sf_application/)
 
 #### **Development Process**

@@ -1,0 +1,249 @@
+---
+title: "EDA"
+author: "Connor Birkhold"
+date: "1/6/2020"
+output: html_document
+---
+
+#### The goal of this EDA is to quickly explore the dataset while validating its accuracy and looking for ways to reduce the size of the data without compromising its integrity. 
+* *Note, the conclusions drawn from this analysis represent the data that was pulled at this time. These conclusions/assumptions could change if when the data is refreshed/updated*
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(fig.width = 8, fig.height = 5)
+```
+
+```{r include=FALSE}
+library(data.table)
+library(tidyverse)
+library(lubridate)
+```
+
+#### Download the raw data
+```{r}
+url <- "https://data.sfgov.org/resource/wg3w-h783.csv"
+
+sfCrime <- fread(url, encoding = 'UTF-8')
+
+str(sfCrime)
+```
+
+#### Identify missing values
+```{r}
+# If there are blank values convert them to NAs
+sfCrime[sfCrime == "", ] <- NA
+
+# Calculate the percentage of NAs by column
+pct.NA <- function(x){
+    sum(is.na(x))/length(x) * 100
+}
+
+pctMissVal <- as.data.frame(lapply(sfCrime, pct.NA))
+pctMissVal <- gather(pctMissVal, key = 'c_name', value = 'pct_na') %>% 
+    arrange(desc(pct_na))
+
+# List columns with percentage of NAs from greatest to least
+print(pctMissVal[1:10, ])
+```
+
+#### With a high percentage of NAs I want to know more about what makes up the @computed_region columns? Are they useful? Are they candidates for imputation or should the be removed?
+```{r results='hide'}
+# Let's look into a @computed_region column with less NAs
+table(sfCrime$`:@computed_region_qgnn_b9vv`)
+
+# Maybe it is a coding for the district or neighborhood?
+table(sfCrime$`:@computed_region_qgnn_b9vv`, sfCrime$police_district)
+table(sfCrime$`:@computed_region_qgnn_b9vv`, sfCrime$analysis_neighborhood)
+
+# Not sure of their significance at this point in time. Removing all @computed_region columns because large amount of NAs and lack of significance at this time
+colNm <- grep("@computed_region", names(sfCrime), value = TRUE)
+sfCrime <- sfCrime[, !colNm, with = FALSE]
+```
+
+#### What are my percentage of NAs by column with @computed_region removed?
+```{r}
+# the "@" was converted to "X.." in pctMissVal so running grep again
+rowNm <- grep("X..computed_region", pctMissVal$c_name, value = TRUE)
+
+'%ni%' <- Negate("%in%") # creat not in function
+
+pctMissVal <- pctMissVal %>% filter(c_name %ni% rowNm)
+
+print(pctMissVal[1:10,])
+```
+
+#### Removing columns filed_online and cad_number due to high percentage of NAs
+```{r}
+sfCrime <- sfCrime[, -c('filed_online',
+                        'cad_number')]
+```
+
+#### Cleaning up date columns
+```{r}
+# Only interested in the dates right now. Cleaning those up and removing times
+sfCrime <- sfCrime[, 
+                   `:=`(incident_date = str_sub(incident_date, 1, 10),
+                        report_date = str_sub(report_datetime, 1, 10))] %>% 
+    .[,
+      `:=`(incident_date = ymd(incident_date),
+           report_date = ymd(report_date))]
+
+# removing incident_datetime, report_datetime, and incident_time for now
+sfCrime <- sfCrime[, -c("incident_datetime", 
+                        "report_datetime",
+                        "incident_time")]
+```
+
+#### According to the documentation provided with the dataset each row represents an incident. Let's validate which column or columns support this claim.
+```{r}
+# row_id
+uniqueN(sfCrime$row_id) == nrow(sfCrime); uniqueN(sfCrime$row_id)
+
+# incident_id
+uniqueN(sfCrime$incident_id) == nrow(sfCrime); uniqueN(sfCrime$incident_id)
+
+# incident_number
+uniqueN(sfCrime$incident_number) == nrow(sfCrime); uniqueN(sfCrime$incident_number)
+
+# combo of incident_id, incident_number, and incident_code
+uniqueN(paste(sfCrime$incident_id, 
+              sfCrime$incident_number, 
+              sfCrime$incident_code, sep = "")) == nrow(sfCrime); uniqueN(paste(sfCrime$incident_id, 
+              sfCrime$incident_number, 
+              sfCrime$incident_code, sep = ""))
+
+# setting up a unique column with the combination of incident_id, incident_number, and incident_code
+sfCrime <- sfCrime[, incident_id_nbr_cd := paste(sfCrime$incident_id, 
+              sfCrime$incident_number, 
+              sfCrime$incident_code, sep = "-")]
+
+# remove incident_id, incident_number, incident_code, and row_id. Reducing size of data
+sfCrime <- sfCrime[, - c("incident_id",
+                         "incident_number",
+                         "incident_code",
+                         "row_id")]
+
+```
+
+#### Location information
+- Can we reduce the location information to only police_district, latitude, and longitude?
+- Removing incidents without any location detail. In initial EDA this removed 69 observations or 6.9% of data. This figure would likely change if the data is updated.
+```{r}
+# remove "point" because it not required for our intentions
+sfCrime <- sfCrime[, - "point"]
+
+# Remove incidents without any location detail
+sfCrime <- sfCrime[, filt_ind := ifelse(is.na(latitude) & 
+                                            is.na(intersection) &
+                                            is.na(longitude) &
+                                            is.na(supervisor_district) & 
+                                            is.na(analysis_neighborhood), 1, 0)] %>% 
+    .[filt_ind == 0, ] %>% 
+    .[, - "filt_ind"]
+
+# Referencing the pctMissVal table I can see that police district does not have any NAs and could be used a general location reference for incidents without a latitude and longitude
+table(sfCrime$police_district); uniqueN(sfCrime$police_district)
+
+# For now, excluding incidents without a lat/long.
+# This step did not remove any additional data
+sfCrime <- sfCrime[!is.na(latitude) & !is.na(longitude), ]
+
+
+# How are police_district and supervisor_district connected?
+# Doesn't appear to be a clean connection. Removing supervisor_district for now
+table(sfCrime$police_district, sfCrime$supervisor_district)
+sfCrime <- sfCrime[, - "supervisor_district"]
+
+# Let's exclude anything with police_district equal to "Out of SF"
+sfCrime <- sfCrime[police_district != "Out of SF", ]
+
+
+# Excluding intersection for now. cnn is also related to intersection, excluding for now
+sfCrime <- sfCrime[, - c("intersection",
+                         "cnn")]
+
+```
+
+#### Description of incidents
+```{r}
+
+# resolution is a column that might infer there will be more or less incidents in the future. Let's clean up resolution. Setting it up to expand this column into indicator columns later
+sfCrime <- sfCrime[, resolution := tolower(resolution)]
+sfCrime <- sfCrime[, resolution := str_replace_all(resolution, " ", "_")]
+
+
+# report_type_description is another column that might infer there will be more or less incidents in the future. Let's clean up report_type_description.
+sfCrime <- sfCrime[, report_type_description := tolower(report_type_description)]
+sfCrime <- sfCrime[, report_type_description := str_replace_all(report_type_description, " ", "_")]
+
+# incident_category, incident_subcategory, and incident_description hold a lot of good detail. Potential to extract key words/phrases for model building (NLP). 
+
+# Removing report_type_code
+sfCrime <- sfCrime[, - "report_type_code"]
+
+```
+
+#### Re-organizing column order
+```{r}
+# Add an incident_cnt column
+sfCrime$incident_cnt <- 1
+
+# Re-order columns
+sfCrime <- sfCrime[, c("incident_id_nbr_cd",
+                       "incident_date",
+                       "incident_day_of_week",
+                       "incident_year",
+                       "report_date",
+                       "police_district",
+                       "analysis_neighborhood",
+                       "latitude",
+                       "longitude",
+                       "report_type_description",
+                       "incident_category",
+                       "incident_subcategory",
+                       "incident_description",
+                       "resolution",
+                       "incident_cnt")]
+
+```
+
+#### Distributions and summary statisitcs
+```{r}
+# What is the total nbr of incidents per year?
+sfCrime[, .(incidents = sum(incident_cnt)),
+        by = incident_year]
+
+# What is the avg nbr of incidents per day?
+sum(sfCrime$incident_cnt)/uniqueN(sfCrime$incident_date)
+
+# What is the avg nbr of incidents per day by district?
+sfCrime[, .(avg_incidents = sum(incident_cnt)/uniqueN(incident_date)),
+        by = police_district]
+
+# What is the percentage of incidents by district?
+# Central, Northern, and Southern have the highest percentage of incidents. Is that potentially due to the size of the district?
+# Could be beneficial to bring in population/demographic data 
+sfCrime[, round(prop.table(table(incident_cnt, police_district), 1), 2)]
+
+# What is the percentage of incidents by day of week?
+# Most incidents happen on Friday and Saturday (makes sense)
+sfCrime[, round(prop.table(table(incident_cnt, incident_day_of_week), 1), 2)]
+
+# What is the percentage of incidents by resolution?
+# resolution doesn't appear to be a good indicator column. Removing from data
+sfCrime[, round(prop.table(table(incident_cnt, resolution), 1), 2)]
+sfCrime <- sfCrime[, - "resolution"]
+
+```
+
+#### Incidents By Date
+* The data looks incomplete. There are gaps when reports are coming in and then they stop and start again. The dates that look valid (i.e. reports are frequent) is 2019-09-29 to 2019-10-05.
+```{r}
+# Incidents by date
+byDate <- sfCrime[, .(cnt = sum(incident_cnt)),
+                  by = incident_date]
+
+byDate <- byDate[order(rank(incident_date)),]
+
+plot(byDate$incident_date, byDate$cnt)
+# 
+```

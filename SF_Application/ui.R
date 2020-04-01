@@ -235,37 +235,43 @@ shinyServer(navbarPage(
     #              tags$li(tags$span("Extracted text from `incident_description`")),
     #              tags$li(tags$span("test"))
     #          )),
-    #          
+    # 
     #          br(),
-    #          
+    # 
     #          tabsetPanel(
-    #              
+    # 
     #              # tabPanel("Data Overview",
-    #              #          
+    #              #
     #              #          fluidRow(
     #              #              column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
     #              #                                                         width = "auto", height = "auto")))
     #              #          )
     #              # ),
-    #              
+    # 
     #              tabPanel("Classifier Tool",
-    #                       
+    # 
     #                       br(),
-    #                       
+    # 
     #                       fluidRow(
     #                           column(width = 12, h4("Describe the crime using the dropdown and description boxes:"))
     #                       ),
-    #                       
+    # 
     #                       fluidRow(
     #                           column(width = 3, uiOutput("top10wordsList")),
     #                           column(width = 3, uiOutput("top20wordsList")),
     #                           column(width = 6, textInput("classTextInput",
     #                                                       label = "Text Input:",
     #                                                       value = "Enter text..."))
+    #                       ),
+    #                       
+    #                       br(),
+    #                       
+    #                       fluidRow(
+    #                           column(width = 3, textOutput("predictedClass"))
     #                       )
     #              )
     #          )
-    #          
+    # 
     # ),
     
     tabPanel(title = "Data", value = 'dataExplorer',
