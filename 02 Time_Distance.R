@@ -44,7 +44,7 @@ sfCrime <- sfCrime[, c("incident_id_nbr_cd",
 # put in order by datetime
 sfCrime <- sfCrime[order(rank(incident_datetime)), ]
 
-
+#-------------------------------------------------------------------------------
 # min_to_nxt_incident
 # minutes to next incident
 time.till <- function(data){
@@ -65,6 +65,7 @@ time.till <- function(data){
 
 sfCrime <- time.till(data = sfCrime)
 
+#-------------------------------------------------------------------------------
 # ft_to_nxt_incident
 # feet to next incident
 dist.ft <- function(data){
@@ -88,6 +89,7 @@ dist.ft <- function(data){
 
 sfCrime <- dist.ft(data = sfCrime)
 
+#-------------------------------------------------------------------------------
 # min_bw_report - minutes b/w incident and report
 sfCrime <- sfCrime[, min_bw_report := difftime(report_datetime, 
                                                incident_datetime, 
