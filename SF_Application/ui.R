@@ -131,6 +131,8 @@ shinyServer(navbarPage(
                                                          tags$li(tags$span(textOutput("shapiroTest")))
                                                      )),
                                                      
+                                                     br(),
+                                                     
                                                      h4("Is the deviation from normality going to materially impact results?"),
                                                      
                                                      tags$div(tags$ul(
@@ -200,13 +202,21 @@ shinyServer(navbarPage(
                                                  hr(),
                                                  
                                                  fluidRow(
-                                                     h4("Conclusions:"),
+                                                     h4("Interpretation of Results:"),
                                                      tags$div(tags$ul(
                                                          tags$li(tags$span("The mean under Friday is greater than the mean under Wednesday.")),
                                                          tags$li(tags$span("The p-value is greater than 0.05 indicating weak evidence against the null hypothesis.")),
                                                          tags$li(tags$span("The p-value is saying that assuming the incident count (aka day of week) has no effect, you'd 
                                                                            obtain the observed difference or more in 74% of studies due to random sampling error.")),
                                                          tags$li(tags$span("Further supporting the lack of evidence against the null hypothesis the confidence interval contains zero.")),
+                                                     ))
+                                                 ),
+                                                 
+                                                 br(),
+                                                 
+                                                 fluidRow(
+                                                     h4("Inferences:"),
+                                                     tags$div(tags$ul(
                                                          tags$li(tags$span("Based on these results we can infer that the frequency of incidents
                                                                             is not a statistically significant determinent of the average distance between incidents.
                                                                             Thus we fail to reject the null hypothesis.")),

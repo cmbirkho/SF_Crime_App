@@ -247,3 +247,38 @@ byDate <- byDate[order(rank(incident_date)),]
 plot(byDate$incident_date, byDate$cnt)
 # 
 ```
+
+
+```{r}
+library(RSQLite)
+library(DBI)
+
+# create a connection to the database
+dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sqlite"
+db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+
+sfCrime <- dbGetQuery(db, "SELECT 
+                              ir.incident_id_nbr_cd,
+                              ir.incident_category,
+                              ml.min_bw_report
+                           FROM incident_reports ir
+                           JOIN ml_data_incidents ml
+                           ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd;")
+
+dbDisconnect(db)
+
+# convert to data.table
+setDT(sfCrime)
+```
+
+```{r}
+sd <- sd(sfCrime$min_bw_report)
+m <- mean(sfCrime$min_bw_report)
+lowLim <- m - sd * 2
+upLim <- m + sd * 2 
+
+sfCrime <- sfCrime[min_bw_report >= lowLim & min_bw_report <= upLim, ]
+
+hist(sfCrime$min_bw_report)
+```
+
