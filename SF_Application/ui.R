@@ -237,52 +237,57 @@ shinyServer(navbarPage(
              
     ),
     
-    # tabPanel("Classification", value = "machineLearning",
-    # 
-    #          h3("Can we use text data to create a tool that classifies crimes based on their description?"),
-    #          br(),
-    #          tags$div(tags$ul(
-    #              tags$li(tags$span("Extracted text from `incident_description`")),
-    #              tags$li(tags$span("test"))
-    #          )),
-    # 
-    #          br(),
-    # 
-    #          tabsetPanel(
-    # 
-    #              # tabPanel("Data Overview",
-    #              #
-    #              #          fluidRow(
-    #              #              column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
-    #              #                                                         width = "auto", height = "auto")))
-    #              #          )
-    #              # ),
-    # 
-    #              tabPanel("Classifier Tool",
-    # 
-    #                       br(),
-    # 
-    #                       fluidRow(
-    #                           column(width = 12, h4("Describe the crime using the dropdown and description boxes:"))
-    #                       ),
-    # 
-    #                       fluidRow(
-    #                           column(width = 3, uiOutput("top10wordsList")),
-    #                           column(width = 3, uiOutput("top20wordsList")),
-    #                           column(width = 6, textInput("classTextInput",
-    #                                                       label = "Text Input:",
-    #                                                       value = "Enter text..."))
-    #                       ),
-    #                       
-    #                       br(),
-    #                       
-    #                       fluidRow(
-    #                           column(width = 3, textOutput("predictedClass"))
-    #                       )
-    #              )
-    #          )
-    # 
-    # ),
+    tabPanel("Classification", value = "machineLearning",
+
+             h4("Can we use the text data from the report descriptions to classify the crimes?"),
+             br(),
+             # tags$div(tags$ul(
+             #     tags$li(tags$span("")),
+             #     tags$li(tags$span(""))
+             # )),
+
+             br(),
+
+             tabsetPanel(id = "machineLearningTabs",
+
+                 tabPanel("Text Overview",
+
+                          fluidRow(
+                              column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
+                                                                         width = "auto", height = "auto"))),
+                              column(width = 6, withSpinner(plotlyOutput("ui_reportDescTextLength",
+                                                                         width = "auto", height = "auto")))
+                          )
+                 ),
+
+                 tabPanel("Classifier Tool", value = "classifierTool",
+
+                          br(),
+
+                          fluidRow(
+                              column(width = 12, h4("Describe the crime using the dropdown and description boxes:"))
+                          ),
+                          
+                          br(),
+
+                          fluidRow(
+                              column(width = 3, uiOutput("top10wordsList")),
+                              column(width = 3, uiOutput("top20wordsList")),
+                              column(width = 6, textInput("classTextInput",
+                                                          label = "Text Input:",
+                                                          value = "Enter text..."))
+                          ),
+
+                          br(),
+                         
+                          fluidRow(
+                              column(width = 12, h4("Predicted category:", textOutput("predictedClass", inline = TRUE)))
+                          )
+                          
+                 )
+             )
+
+    ),
     
     tabPanel(title = "Data", value = 'dataExplorer',
              

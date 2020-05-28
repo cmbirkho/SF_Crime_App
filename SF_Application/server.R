@@ -268,24 +268,26 @@ shinyServer(function(input, output, session){
 
             # incidents by category
             output$ui_incidentCat <- renderPlotly({
+                
+                incCount <- sum(pctData()$incident_cnt)
 
-                countIncid <- pctData()[, .(cnt = sum(incident_cnt)),
+                countIncid <- pctData()[, .(pct = (sum(incident_cnt)/incCount) * 100),
                                         by = incident_category]
 
-                countIncid <- countIncid[order(-rank(cnt)),]
+                countIncid <- countIncid[order(-rank(pct)),]
                 countIncid <- countIncid[1:10, ]
 
                 countIncid$incident_category <- factor(countIncid$incident_category,
-                                                       levels = unique(countIncid$incident_category)[order(countIncid$cnt,
+                                                       levels = unique(countIncid$incident_category)[order(countIncid$pct,
                                                                                                            decreasing = FALSE)])
 
-                plot_ly(x = countIncid$cnt,
+                plot_ly(x = countIncid$pct,
                         y = countIncid$incident_category,
                         type = 'bar',
                         orientation = 'h',
                         color = I('#1287A8')) %>%
-                    layout(title = "Incidents by Category | Top 10",
-                           xaxis = list(title = "Count"),
+                    layout(title = "Percent of Incidents by Category | Top 10",
+                           xaxis = list(ticksuffix = "%"),
                            margin = list(t = 90,
                                          size = 14),
                            paper_bgcolor = 'transparent',
@@ -476,7 +478,7 @@ shinyServer(function(input, output, session){
             meanFtFri <- isData()[incident_day_of_week == 'Friday',]
             meanFtFri <- round(mean(meanFtFri$ft_to_nxt_incident),0)
             
-            paste("The sample size for Friday is ", nbrRowFri, ".", " With a mean distance to next incident ", meanFtFri, " feet.")
+            paste("The sample size for Friday is ", nbrRowFri, " with a mean distance to next incident of ", meanFtFri, " feet.")
         })
         
         # text output for sample for Wednesday
@@ -486,7 +488,7 @@ shinyServer(function(input, output, session){
             meanFtWed <- isData()[incident_day_of_week == 'Wednesday',]
             meanFtWed <- round(mean(meanFtWed$ft_to_nxt_incident),0)
             
-            paste("The sample size for Wednesday is ", nbrRowWed, ".", " With a mean distance to next incident ", meanFtWed, " feet.")
+            paste("The sample size for Wednesday is ", nbrRowWed, " with a mean distance to next incident of ", meanFtWed, " feet.")
         })
     
         # boxplot - sample distribution
@@ -704,7 +706,7 @@ shinyServer(function(input, output, session){
     })
     
 #-------------------------------------------------------------------------------
-    # observe event for MACHINE LEARNING tab
+    # observe event for CLASSIFICATION tab
     observeEvent(input$navbarPages == "machineLearning", {
         
         # get top 20 words
@@ -723,10 +725,22 @@ shinyServer(function(input, output, session){
             dbDisconnect(db)
             
             setDT(topWords)
-            
-            topWords
         })
         
+        
+        # get report descriptions text length
+        dbPath <- "./sf_crime_db.sqlite"
+        db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
+        
+        textLength <- dbGetQuery(db,  "SELECT *
+                                           FROM report_desc_length;")
+        
+        dbDisconnect(db)
+        
+        setDT(textLength)
+            
+        
+        # full bag_of_words table
         allWords <- reactive({
             dbPath <- "./sf_crime_db.sqlite"
             db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
@@ -741,35 +755,49 @@ shinyServer(function(input, output, session){
             allWords
         })
         
-        
         #-----------------------------------------------------------------------
-        # Data Overview tab
+        # Text Overview tab
         
         # top 20 words barchart
-        # output$ui_top20barchart <- renderPlotly({
-        #     
-        #     
-        #     tw <- topWords()[order(-rank(cnt)),]
-        #     
-        #     tw$variable <- factor(tw$variable,
-        #                           levels = unique(tw$variable)[order(tw$cnt,
-        #                                                              decreasing = FALSE)])
-        #     
-        #     plot_ly(x = tw$cnt,
-        #             y = tw$variable,
-        #             type = 'bar',
-        #             orientation = 'h',
-        #             color = I('#1287A8')) %>%
-        #         layout(title = "Top 20 Words",
-        #                xaxis = list(title = "Count"),
-        #                margin = list(t = 90,
-        #                              size = 14),
-        #                paper_bgcolor = 'transparent',
-        #                plot_bgcolor = 'transparent',
-        #                font = list(color = '#ffffff'))
-        # })
-        # 
-        
+        output$ui_top20barchart <- renderPlotly({
+
+
+            tw <- topWords()[order(-rank(cnt)),]
+
+            tw$variable <- factor(tw$variable,
+                                  levels = unique(tw$variable)[order(tw$cnt,
+                                                                     decreasing = FALSE)])
+
+            plot_ly(x = tw$cnt,
+                    y = tw$variable,
+                    type = 'bar',
+                    orientation = 'h',
+                    color = I('#1287A8')) %>%
+                layout(title = "Top 20 Words",
+                       xaxis = list(title = "Count"),
+                       margin = list(t = 90,
+                                     size = 14),
+                       paper_bgcolor = 'transparent',
+                       plot_bgcolor = 'transparent',
+                       font = list(color = '#ffffff'))
+        })
+
+        # histogram for report description text lengths
+        output$ui_reportDescTextLength <- renderPlotly({
+            
+            plot_ly(type = 'histogram',
+                   x = textLength$desc_length,
+                   color = I('#1287A8')) %>%
+                layout(title = "Report Description Text Length Distribution",
+                       xaxis = list(title = "Text Length"),
+                       margin = list(t = 90,
+                                     size = 14),
+                       bargap = 0.1,
+                       paper_bgcolor = 'transparent',
+                       plot_bgcolor = 'transparent',
+                       font = list(color = '#ffffff'))
+            
+        })
         
         
         
@@ -777,6 +805,7 @@ shinyServer(function(input, output, session){
         #-----------------------------------------------------------------------
         # Classifier Tool tab
         
+            
         # Inputs for prediction
         # Top 10 most frequent words
         top10words <- reactive({
@@ -786,7 +815,7 @@ shinyServer(function(input, output, session){
             top10words$variable
         })
         
-       
+        
         output$top10wordsList <- renderUI({
             selectInput("pick_first_word",
                         label = "Input 1:",
@@ -817,11 +846,11 @@ shinyServer(function(input, output, session){
         output$predictedClass <- reactive({
             
             # Make a dataframe of the inputs
-            descDf <- as.data.frame(c(input$pick_first_word,
-                                      input$pick_second_word,
-                                      input$classTextInput))
-            names(descDf) <- "text"
-            descDf$doc_id <- c(1, 2, 3)
+            text <- c(input$pick_first_word,
+                      input$pick_second_word,
+                      input$classTextInput)
+            doc_id <- c(1, 2, 3)
+            descDf <- as.data.frame(cbind(text, doc_id))
             
             # make into corpus, clean, and make a word bag
             dfSource <- DataframeSource(descDf)
@@ -833,7 +862,7 @@ shinyServer(function(input, output, session){
                 corpus <- tm_map(corpus, content_transformer(removePunctuation))
                 corpus <- tm_map(corpus, content_transformer(tolower))
                 corpus <- tm_map(corpus, removeNumbers)
-                corpus <- tm_map(corpus, content_transformer(removeWords), 
+                corpus <- tm_map(corpus, content_transformer(removeWords),
                                  stopwords("english"))
                 # corpus <- tm_map(corpus, stemDocument)
                 corpus <- tm_map(corpus, stripWhitespace)
@@ -856,16 +885,18 @@ shinyServer(function(input, output, session){
             
             # melt
             setDT(dfNew)
-            dfNew <- melt(dfNew)
+            mv <- names(dfNew)
+            dfNew <- melt(dfNew, measure.vars = mv, fun.aggregate = length)
             
             # spread
             dfNew <- unique(dfNew)
             dfNew <- dcast(dfNew, . ~ variable, fun.aggregate = sum)
-            dfNew <- as.data.frame(lapply(dfNew, as.factor))
+            dfNew <- dfNew[,-1]
+            dfNew <- as.data.frame(lapply(dfNew, as.factor), row.names = FALSE)
             setDT(dfNew)
             
             # check if any of the input words are used in the word bag data
-            # if they are then keep them if not then filter them out
+            # if they are then keep them, if not then filter them out
             # create dfNew which will be used for prediction
             wordList <- names(dfNew)
             filtList <- vector()
@@ -874,24 +905,24 @@ shinyServer(function(input, output, session){
                     filtList <- rbind(filtList, wordList[i])
                 }
             }
-
-            setDT(dfNew)
+            
             dfNew <- dfNew[, filtList, with = FALSE]
             
             # filter the training data to only words used in filtList
             trainData <- allWords()[variable %in% filtList, ]
-            trainData <- unique(trainData)
-            trainData <- dcast(trainData, incident_category ~ variable,
-                               fun.aggregate = sum)
+            trainData$value <- as.character(trainData$value)
+            trainData$id <- 1:nrow(trainData)
+            trainData <- dcast(trainData, id + incident_category ~ variable, 
+                               value.var = "value", fill = 0)
+            trainData <- trainData[, - 'id']
             trainData <- as.data.frame(lapply(trainData, as.factor))
             setDT(trainData)
-            datatable(trainData)
             
             # train a model based on that data
             rf_classifier <- train(incident_category ~ .,
                                    data = trainData,
                                    method = "rpart")
-
+            
             # make a prediction for dfNew
             predict(rf_classifier, dfNew)
         })
@@ -899,7 +930,7 @@ shinyServer(function(input, output, session){
     })
     
     
-#-------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------
     # observe event for DATA DOWNLOAD tab
     observeEvent(input$navbarPages == 'dataExplorer' ,{
         
@@ -912,9 +943,12 @@ shinyServer(function(input, output, session){
                                             ,ml.min_to_nxt_incident
                                             ,ft_to_nxt_incident
                                             ,min_bw_report
+                                            ,desc_length
                                           FROM incident_reports ir
                                           JOIN ml_data_incidents ml
-                                          ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd;")
+                                          ON ir.incident_id_nbr_cd = ml.incident_id_nbr_cd
+                                          JOIN report_desc_length rl
+                                          ON ir.incident_id_nbr_cd = rl.incident_id_nbr_cd;")
         
         dbDisconnect(db)
         setDT(sfCrimeDataDld) # convert to data.table

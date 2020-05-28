@@ -31,6 +31,14 @@ filt <- df[, .(sum = sum(cnt)),
 
 df <- df[incident_category %in% filt$incident_category, ]
 
+# get the text length of each report description and save to seperate table
+textLength <- df[, c('incident_id_nbr_cd',
+                     'incident_description')]
+
+textLength$desc_length <- nchar(textLength$incident_description)
+
+textLength <- textLength[, - "incident_description"]
+
 # make a corpus
 setnames(df, "incident_id_nbr_cd", "doc_id")
 setnames(df, "incident_description", "text")
@@ -100,7 +108,7 @@ dfNew$variable <- as.character(dfNew$variable)
 dbPath <- "C:/Users/Cbirkho/Documents/SF_Crime_App/SF_Application/sf_crime_db.sqlite"
 db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 
-# Set up incident_reports table
+# Set up bag_of_words table
 # This was the code used to initially set up the table
 #-------------------------------------------------------------------------------
 # dbExecute(db, "CREATE TABLE bag_of_words
@@ -109,7 +117,15 @@ db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
 #                  value INTEGER NOT NULL);")
 #-------------------------------------------------------------------------------
 
-load_data <- function(df) {
+# Set up report_desc_length table
+# This was the code used to initially set up the table
+#-------------------------------------------------------------------------------
+# dbExecute(db, "CREATE TABLE report_desc_length
+#                 (incident_id_nbr_cd TEXT NOT NULL,
+#                  desc_length INTEGER NOT NULL);")
+#-------------------------------------------------------------------------------
+
+load_data_bg <- function(df) {
     
     print("=====Uploading data to bag_of_words table=====")
     # we want to add only the new combinations
@@ -126,7 +142,26 @@ load_data <- function(df) {
     print("=====Data upload complete=====")
 }
 
-load_data(df = dfNew)
+load_data_bg(df = dfNew)
+
+
+load_data_tl <- function(df) {
+    
+    print("=====Uploading data to report_desc_length table=====")
+    # we want to add only the new combinations
+    insertnew <- dbSendQuery(db, "INSERT OR IGNORE INTO report_desc_length VALUES 
+                                    (:incident_id_nbr_cd,
+                                     :desc_length);")
+    dbBind(insertnew, params = df)  # execute
+    dbClearResult(insertnew) # release the prepared statement
+    
+    # disconnecting
+    dbDisconnect(db)
+    
+    print("=====Data upload complete=====")
+}
+
+load_data_tl(df = textLength)
 
 
 
