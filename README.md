@@ -6,6 +6,7 @@
 - The user can interact with the data in several ways by exploring each of the following tabs on the UI:
     - Overview
     - Inference
+    - Classification
     - Data
     - About
 

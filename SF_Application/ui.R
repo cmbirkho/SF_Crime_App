@@ -225,6 +225,17 @@ shinyServer(navbarPage(
                                                                             taking the same time to respond from one incident to the next. This logic would support 
                                                                             the need for having more officers on duty during days with a higher frequency of incidents."))
                                                      ))
+                                                 ),
+                                                 
+                                                 br(),
+                                                 
+                                                 fluidRow(
+                                                     h4("Final Thoughts:"),
+                                                     tags$div(tags$ul(
+                                                         tags$li(tags$span("The results of the test are possibly skewed due to how the distance was calculated. In the
+                                                                            next iteration of this test it would make sense to calculate distance between the next
+                                                                            incident for each individual police district versus all of San Francisco. To be continued..."))
+                                                     ))
                                                  )
                                         )
                                         

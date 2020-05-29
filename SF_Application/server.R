@@ -788,7 +788,8 @@ shinyServer(function(input, output, session){
             
             plot_ly(type = 'histogram',
                    x = textLength$desc_length,
-                   color = I('#1287A8')) %>%
+                   color = I('#1287A8'),
+                   nbinsx = 20) %>%
                 layout(title = "Report Description Text Length Distribution",
                        xaxis = list(title = "Text Length"),
                        margin = list(t = 90,
