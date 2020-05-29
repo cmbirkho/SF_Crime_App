@@ -16,6 +16,7 @@ library(tidytext)
 library(stopwords)
 library(tm)
 library(caret)
+library(e1071)
 
 
 shinyServer(function(input, output, session){
@@ -833,6 +834,7 @@ shinyServer(function(input, output, session){
         })
         
         output$top20wordsList <- renderUI({
+            
             selectInput("pick_second_word",
                         label = "Input 2:",
                         choices = top20words(),
@@ -905,26 +907,32 @@ shinyServer(function(input, output, session){
                     filtList <- rbind(filtList, wordList[i])
                 }
             }
-            
+
             dfNew <- dfNew[, filtList, with = FALSE]
             
             # filter the training data to only words used in filtList
             trainData <- allWords()[variable %in% filtList, ]
             trainData$value <- as.character(trainData$value)
             trainData$id <- 1:nrow(trainData)
-            trainData <- dcast(trainData, id + incident_category ~ variable, 
-                               value.var = "value", fill = 0)
-            trainData <- trainData[, - 'id']
-            trainData <- as.data.frame(lapply(trainData, as.factor))
-            setDT(trainData)
             
-            # train a model based on that data
-            rf_classifier <- train(incident_category ~ .,
-                                   data = trainData,
-                                   method = "rpart")
-            
-            # make a prediction for dfNew
-            predict(rf_classifier, dfNew)
+            # wrapper for dcast empty data.table error
+            if(trainData[, .N] > 0){
+                trainData <- dcast(trainData, id + incident_category ~ variable,
+                                   value.var = "value", fill = 0)
+                
+                trainData <- trainData[, - 'id']
+                trainData <- as.data.frame(lapply(trainData, as.factor))
+                setDT(trainData)
+                
+                # train a model based on that data
+                rf_classifier <- train(incident_category ~ .,
+                                       data = trainData,
+                                       method = "rpart")
+                
+                # make a prediction for dfNew
+                predict(rf_classifier, dfNew)
+                
+            } 
         })
         
     })

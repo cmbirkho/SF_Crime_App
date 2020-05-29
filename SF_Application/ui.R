@@ -241,10 +241,11 @@ shinyServer(navbarPage(
 
              h4("Can we use the text data from the report descriptions to classify the crimes?"),
              br(),
-             # tags$div(tags$ul(
-             #     tags$li(tags$span("")),
-             #     tags$li(tags$span(""))
-             # )),
+             
+             tags$div(tags$ul(
+                 tags$li(tags$span("Mine the text data from the incident descriptions filed by the officers.")),
+                 tags$li(tags$span("Create a model that takes in text inputs and assigns the incident category."))
+             )),
 
              br(),
 
@@ -281,12 +282,17 @@ shinyServer(navbarPage(
                           br(),
                          
                           fluidRow(
-                              column(width = 12, h4("Predicted category:", textOutput("predictedClass", inline = TRUE)))
+                              column(width = 3, h4("Predicted category:")),
+                              
+                              ),
+                          fluidRow(
+                              column(width = 6,
+                                     h2(tags$b(tags$span(textOutput("predictedClass", 
+                                                                    inline = TRUE), style = "color:green"))))
                           )
-                          
                  )
              )
-
+             
     ),
     
     tabPanel(title = "Data", value = 'dataExplorer',
