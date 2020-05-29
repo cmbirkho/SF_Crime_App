@@ -728,7 +728,7 @@ shinyServer(function(input, output, session){
             setDT(topWords)
         })
         
-        
+    
         # get report descriptions text length
         dbPath <- "./sf_crime_db.sqlite"
         db <- dbConnect(RSQLite::SQLite(), dbname = dbPath)
@@ -736,9 +736,37 @@ shinyServer(function(input, output, session){
         textLength <- dbGetQuery(db,  "SELECT *
                                            FROM report_desc_length;")
         
-        dbDisconnect(db)
+        
         
         setDT(textLength)
+        
+        # get top 10 words by incident_category
+        top10catg <- dbGetQuery(db,  "  SELECT
+                                            incident_category
+                                        	,variable
+                                            ,value
+                                         FROM bag_of_words
+                                         WHERE 
+                                         	value = '1'
+                                         	AND variable IN (SELECT 
+                                         					variable
+                                        				 FROM (SELECT 
+                                        				 		variable
+                                        				 		,sum(value) AS cnt
+                                        				 	  FROM bag_of_words
+                                        				 	  GROUP BY variable
+                                        				 	  ORDER BY cnt DESC
+                                        				 	  LIMIT 10))")
+        
+        dbDisconnect(db)
+        
+        setDT(top10catg)
+        
+        
+        top10catg <- dcast(top10catg, incident_category ~ variable,
+                           value.var = 'value', fun.aggregate = sum)
+        
+        
             
         
         # full bag_of_words table
@@ -801,6 +829,57 @@ shinyServer(function(input, output, session){
             
         })
         
+        # stacked bar chart top 10 words by category
+        output$ui_stackedBarTop10 <- renderPlotly({
+            
+            fig <- plot_ly(top10catg,
+                           x = ~ incident_category,
+                           y =  ~ auto,
+                           type = 'bar',
+                           orientation = 'v',
+                           name = names(top10catg[,2]))
+            
+            fig <- fig %>% add_trace(y = ~ burglary,
+                                     name = names(top10catg[,3]))
+
+            fig <- fig %>% add_trace(y = ~ detention,
+                                     name = names(top10catg[,4]))
+
+            fig <- fig %>% add_trace(y = ~ locked,
+                                     name = names(top10catg[,5]))
+
+            fig <- fig %>% add_trace(y = ~ malicious,
+                                     name = names(top10catg[,6]))
+
+            fig <- fig %>% add_trace(y = ~ mischief,
+                                     name = names(top10catg[,7]))
+
+            fig <- fig %>% add_trace(y = ~ property,
+                                     name = names(top10catg[,8]))
+
+            fig <- fig %>% add_trace(y = ~ stolen,
+                                     name = names(top10catg[,9]))
+
+            fig <- fig %>% add_trace(y = ~ theft,
+                                     name = names(top10catg[,10]))
+
+            fig <- fig %>% add_trace(y = ~ vehicle,
+                                     name = names(top10catg[,11]))
+            
+            fig <- fig %>% layout(title = "Top 10 Words by Incident Category",
+                                  margin = list(t = 90,
+                                                size = 14),
+                                  bargap = 0.1,
+                                  paper_bgcolor = 'transparent',
+                                  plot_bgcolor = 'transparent',
+                                  font = list(color = '#ffffff'),
+                                  yaxis = list(title = 'Count'),
+                                  xaxis = list(title = ''),
+                                  barmode = 'stack')
+            
+            fig
+        })
+        
         
         
         
@@ -844,7 +923,7 @@ shinyServer(function(input, output, session){
         
         
         
-        #-----------------------------------------------------------------------
+       
         # Prediction
         output$predictedClass <- reactive({
             

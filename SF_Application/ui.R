@@ -250,7 +250,7 @@ shinyServer(navbarPage(
     
     tabPanel("Classification", value = "machineLearning",
 
-             h4("Can we use the text data from the report descriptions to classify the crimes?"),
+             h3("Can we use the text data from the report descriptions to classify the crimes?"),
              br(),
              
              tags$div(tags$ul(
@@ -263,6 +263,10 @@ shinyServer(navbarPage(
              tabsetPanel(id = "machineLearningTabs",
 
                  tabPanel("Text Overview",
+                          
+                          column(width = 6, withSpinner(plotlyOutput("ui_stackedBarTop10",
+                                                                     width = "auto", height = "auto"))
+                          ),
 
                           fluidRow(
                               column(width = 6, withSpinner(plotlyOutput("ui_top20barchart",
@@ -270,6 +274,7 @@ shinyServer(navbarPage(
                               column(width = 6, withSpinner(plotlyOutput("ui_reportDescTextLength",
                                                                          width = "auto", height = "auto")))
                           )
+                          
                  ),
 
                  tabPanel("Classifier Tool", value = "classifierTool",
