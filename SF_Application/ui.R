@@ -126,11 +126,15 @@ shinyServer(navbarPage(
                                                             plotlyOutput("isBoxPlot",
                                                                          width = 'auto', height = '600px')),
                                                      
-                                                     tags$div(tags$ul(
-                                                         tags$li(tags$span("From the histogram we can see the distribution of distance between incidents does not appear to be normal.")),
-                                                         tags$li(tags$span(textOutput("shapiroTest")))
-                                                     )),
+                                                     br(),
                                                      
+                                                    column(width = 12,
+                                                           tags$div(tags$ul(
+                                                               tags$li(tags$span("From the histogram we can see the distribution of distance between incidents does not appear to be normal.")),
+                                                               tags$li(tags$span(textOutput("shapiroTest")))
+                                                           ))
+                                                    ), 
+                                                    
                                                      br(),
                                                      
                                                      h4("Is the deviation from normality going to materially impact results?"),
