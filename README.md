@@ -10,6 +10,10 @@
     - Data
     - About
 
+![](misc/pic.png)
+
+<br>
+
 #### **Where does the data come from?**
 - Police Department Incident Reports: 2018 to Present. For more information go [**here.**](https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-2018-to-Present/wg3w-h783)
 
