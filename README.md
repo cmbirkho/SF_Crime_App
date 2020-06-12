@@ -10,7 +10,7 @@
     - Data
     - About
 
-![app example](misc/pic.png)
+![app example](https://github.com/cmbirkho/SF_Crime_App/blob/master/misc/pic.PNG)
 
 <br>
 
