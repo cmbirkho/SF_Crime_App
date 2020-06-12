@@ -10,7 +10,7 @@
     - Data
     - About
 
-![](misc/pic.png)
+![app example](misc/pic.png)
 
 <br>
 
